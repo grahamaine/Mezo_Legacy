@@ -102,13 +102,11 @@ input { font-family: var(--mono); }
   gap: 8px;
 }
 
-.logo-dot {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  background: var(--accent);
-  border-radius: 50%;
-  box-shadow: 0 0 10px var(--accent);
+.logo-img {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  object-fit: cover;
   flex-shrink: 0;
 }
 

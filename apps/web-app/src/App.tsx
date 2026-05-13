@@ -136,7 +136,7 @@ function Sidebar({ address, isConnected, balance, musdBalance, onConnect, onDisc
     <aside className="sidebar">
       <div className="sidebar-glow" />
       <div className="logo-area">
-        <div className="logo"><span className="logo-dot" />Mezo Legacy</div>
+        <div className="logo"><img src="/mezo-icon.png" alt="Mezo Legacy" className="logo-img" />Mezo Legacy</div>
         <div className="logo-sub">Mezo Testnet · v1.0.0</div>
       </div>
       <nav className="nav">
