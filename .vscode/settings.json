@@ -1,9 +1,0 @@
-{
-  "dart.analysisExcludedFolders": [
-    "node_modules",
-    "infrastructure",
-    ".windsurf",
-    ".claude",
-    ".devin"
-  ]
-}

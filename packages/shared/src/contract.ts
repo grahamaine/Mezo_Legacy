@@ -1,4 +1,4 @@
-export const VAULT_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}`;
+export const VAULT_ADDRESS = '0xD35262b376E5211252fa1aedaf0375B460D1Beb5' as `0x${string}`;
 
 export const VAULT_ABI = [
   {

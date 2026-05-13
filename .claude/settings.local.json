@@ -12,7 +12,14 @@
       "Bash(vercel --prod --yes --scope ainegb --env VITE_PROJECT_ID=9345e4dd75c81818985479c8a2beb79f --env VITE_WALLETCONNECT_PROJECT_ID=9345e4dd75c81818985479c8a2beb79f --env VITE_RPC_URL=https://rpc.test.mezo.org)",
       "Bash(vercel --prod --yes --scope ainegb)",
       "Bash(git checkout *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(npx hardhat *)",
+      "Bash(python -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\('ABI functions:', [x['name'] for x in d['abi'] if x['type']=='function']\\); print\\('Bytecode size:', len\\(d['bytecode']\\)//2, 'bytes'\\)\")",
+      "Bash(node -e \"require\\('dotenv'\\).config\\(\\); const k = process.env.DEPLOYER_PRIVATE_KEY; console.log\\('Key loaded:', k ? 'YES \\(' + k.length + ' chars\\)' : 'NO - check .env file'\\); console.log\\('RPC:', process.env.MEZO_RPC_URL || 'NOT SET'\\);\")",
+      "Bash(node -e ' *)",
+      "Bash(node -e \"require\\('dotenv'\\).config\\(\\); const k = process.env.DEPLOYER_PRIVATE_KEY; console.log\\('Key loaded:', k ? 'YES \\(' + k.length + ' chars\\)' : 'NO'\\); console.log\\('RPC:', process.env.MEZO_RPC_URL || 'NOT SET'\\);\")"
     ]
   }
 }

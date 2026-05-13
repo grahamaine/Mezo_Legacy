@@ -1,7 +1,7 @@
 // src/constants/staking.ts
 // Replace STAKING_ADDRESS with your deployed contract address on Sepolia
 
-export const STAKING_ADDRESS = '0xYourContractAddressHere' as `0x${string}`;
+export const STAKING_ADDRESS = '0x3cB9d513e8eC79283e0Ca41784aCc2C072D1ACd1' as `0x${string}`;
 
 export const STAKING_ABI = [
   // stake() — payable, no args, accepts ETH value
