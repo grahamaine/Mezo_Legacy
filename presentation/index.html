@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mezo Legacy — Presentation</title>
+  <style>
+    /* ── Reset & Base ──────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0a0b0f;
+      --surface:  #111318;
+      --border:   rgba(255,255,255,0.07);
+      --accent:   #7c6ef7;
+      --accent2:  #f59e0b;
+      --green:    #22d3a8;
+      --blue:     #38bdf8;
+      --red:      #f87171;
+      --text:     #f1f5f9;
+      --muted:    #6b7280;
+      --sub:      #9ca3af;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden;
+    }
+
+    /* ── Deck container ────────────────────────────────────────────── */
+    #deck {
+      width: 100vw; height: 100vh;
+      position: relative;
+    }
+
+    /* ── Individual slide ──────────────────────────────────────────── */
+    .slide {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      padding: 60px 80px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(60px);
+      transition: opacity .45s ease, transform .45s ease;
+    }
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0);
+    }
+    .slide.exit {
+      opacity: 0;
+      transform: translateX(-60px);
+    }
+
+    /* ── Backgrounds per slide ─────────────────────────────────────── */
+    .slide-hero       { background: radial-gradient(ellipse 80% 60% at 50% 30%, #1a1430 0%, var(--bg) 70%); }
+    .slide-problem    { background: radial-gradient(ellipse 70% 50% at 20% 60%, #1a0f0a 0%, var(--bg) 70%); }
+    .slide-solution   { background: radial-gradient(ellipse 70% 50% at 80% 40%, #0a1520 0%, var(--bg) 70%); }
+    .slide-tech       { background: radial-gradient(ellipse 80% 60% at 50% 50%, #0d0f1a 0%, var(--bg) 70%); }
+    .slide-contracts  { background: radial-gradient(ellipse 70% 50% at 30% 70%, #0a1a10 0%, var(--bg) 70%); }
+    .slide-arch       { background: radial-gradient(ellipse 70% 50% at 70% 30%, #1a1000 0%, var(--bg) 70%); }
+    .slide-features   { background: radial-gradient(ellipse 80% 60% at 50% 50%, #130a1a 0%, var(--bg) 70%); }
+    .slide-metrics    { background: radial-gradient(ellipse 70% 50% at 20% 30%, #0a0f1a 0%, var(--bg) 70%); }
+    .slide-roadmap    { background: radial-gradient(ellipse 70% 50% at 80% 70%, #1a1005 0%, var(--bg) 70%); }
+    .slide-cta        { background: radial-gradient(ellipse 80% 70% at 50% 40%, #1a1430 0%, var(--bg) 70%); }
+
+    /* ── Global grid noise overlay ─────────────────────────────────── */
+    #deck::before {
+      content: '';
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+      background-size: 40px 40px;
+    }
+    .slide { z-index: 1; }
+
+    /* ── Typography ────────────────────────────────────────────────── */
+    .tag {
+      font-size: 11px; font-weight: 700; letter-spacing: 3px;
+      text-transform: uppercase; color: var(--accent);
+      margin-bottom: 18px;
+      border: 1px solid var(--accent);
+      padding: 4px 14px; border-radius: 20px;
+      display: inline-block;
+    }
+    h1 {
+      font-size: clamp(38px, 5vw, 64px);
+      font-weight: 800; line-height: 1.1;
+      letter-spacing: -1.5px;
+      margin-bottom: 18px;
+    }
+    h2 {
+      font-size: clamp(28px, 3.5vw, 46px);
+      font-weight: 800; line-height: 1.15;
+      letter-spacing: -1px; margin-bottom: 14px;
+    }
+    h3 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+    p, li {
+      font-size: clamp(14px, 1.4vw, 17px);
+      color: var(--sub); line-height: 1.65;
+    }
+    .highlight  { color: var(--accent); }
+    .highlight2 { color: var(--accent2); }
+    .green      { color: var(--green); }
+    .blue       { color: var(--blue); }
+
+    /* gradient headline */
+    .grad {
+      background: linear-gradient(135deg, #a78bfa 0%, #7c6ef7 40%, #38bdf8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .grad-orange {
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 60%, #ef4444 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ── Cards ─────────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      backdrop-filter: blur(8px);
+    }
+    .card-grid {
+      display: grid;
+      gap: 20px;
+      width: 100%;
+    }
+    .card-grid-3 { grid-template-columns: repeat(3, 1fr); }
+    .card-grid-2 { grid-template-columns: repeat(2, 1fr); }
+    .card-grid-4 { grid-template-columns: repeat(4, 1fr); }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 22px 24px;
+      text-align: center;
+    }
+    .stat-val {
+      font-size: 32px; font-weight: 800;
+      letter-spacing: -1px;
+      margin-bottom: 6px;
+    }
+    .stat-lbl { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+    /* ── Feature list ───────────────────────────────────────────────── */
+    .feat-list { list-style: none; width: 100%; }
+    .feat-list li {
+      display: flex; align-items: flex-start; gap: 14px;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 15px; color: var(--sub);
+    }
+    .feat-list li:last-child { border-bottom: none; }
+    .feat-icon {
+      width: 32px; height: 32px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; flex-shrink: 0;
+      background: rgba(124,110,247,0.12);
+    }
+    .feat-title { font-weight: 700; color: var(--text); font-size: 15px; }
+
+    /* ── Timeline / Roadmap ─────────────────────────────────────────── */
+    .timeline { width: 100%; position: relative; }
+    .timeline::before {
+      content: ''; position: absolute; left: 28px; top: 0; bottom: 0;
+      width: 2px; background: linear-gradient(to bottom, var(--accent), transparent);
+    }
+    .tl-item {
+      display: flex; align-items: flex-start; gap: 24px;
+      padding: 16px 0;
+      position: relative;
+    }
+    .tl-dot {
+      width: 18px; height: 18px; border-radius: 50%; flex-shrink: 0;
+      margin-top: 2px; margin-left: 20px;
+      border: 2px solid var(--border);
+      background: var(--bg);
+    }
+    .tl-dot.done  { background: var(--green);  border-color: var(--green); }
+    .tl-dot.now   { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 12px var(--accent); }
+    .tl-dot.next  { background: var(--surface); border-color: var(--accent2); }
+    .tl-dot.future{ background: var(--surface); border-color: var(--muted); }
+    .tl-label { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+    .tl-desc  { font-size: 13px; color: var(--sub); margin-top: 2px; }
+
+    /* ── Code block ─────────────────────────────────────────────────── */
+    pre {
+      background: #0d0f18;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px 24px;
+      font-size: 13px;
+      font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+      line-height: 1.6;
+      overflow: auto;
+      width: 100%;
+      color: #c9d1d9;
+    }
+    .kw   { color: #ff7b72; }
+    .fn   { color: #d2a8ff; }
+    .str  { color: #a5d6ff; }
+    .cmt  { color: #8b949e; }
+    .num  { color: #79c0ff; }
+
+    /* ── Badge pill ─────────────────────────────────────────────────── */
+    .pill {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 20px;
+      font-size: 12px; font-weight: 600;
+      border: 1px solid;
+    }
+    .pill-purple { color: var(--accent);  border-color: var(--accent);  background: rgba(124,110,247,0.12); }
+    .pill-green  { color: var(--green);   border-color: var(--green);   background: rgba(34,211,168,0.10); }
+    .pill-amber  { color: var(--accent2); border-color: var(--accent2); background: rgba(245,158,11,0.10); }
+    .pill-blue   { color: var(--blue);    border-color: var(--blue);    background: rgba(56,189,248,0.10); }
+
+    /* ── Address box ────────────────────────────────────────────────── */
+    .addr {
+      font-family: monospace; font-size: 13px;
+      background: #0d0f18; border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 14px;
+      color: var(--green); word-break: break-all;
+    }
+
+    /* ── Divider line ───────────────────────────────────────────────── */
+    .divider {
+      width: 60px; height: 3px; border-radius: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      margin: 16px 0 24px;
+    }
+
+    /* ── Logo ────────────────────────────────────────────────────────── */
+    .logo-wrap {
+      display: flex; align-items: center; gap: 16px;
+      margin-bottom: 24px;
+    }
+    .logo-icon {
+      width: 56px; height: 56px; border-radius: 14px;
+      background: linear-gradient(135deg, #7c6ef7, #38bdf8);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px;
+    }
+    .logo-text { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; }
+    .logo-sub  { font-size: 12px; color: var(--muted); letter-spacing: 1px; }
+
+    /* ── Arch diagram ────────────────────────────────────────────────── */
+    .arch-row {
+      display: flex; gap: 12px; align-items: center;
+      width: 100%; justify-content: center;
+    }
+    .arch-box {
+      flex: 1; text-align: center; padding: 16px 12px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    .arch-arrow {
+      font-size: 20px; color: var(--muted); flex-shrink: 0;
+    }
+    .arch-label { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .arch-sub   { font-size: 11px; color: var(--muted); }
+
+    /* ── Navigation ──────────────────────────────────────────────────── */
+    #nav {
+      position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+      z-index: 100;
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(17,19,24,0.9);
+      border: 1px solid var(--border);
+      border-radius: 40px;
+      padding: 10px 20px;
+      backdrop-filter: blur(12px);
+    }
+    #nav button {
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 18px; padding: 4px 8px;
+      border-radius: 8px; transition: color .2s, background .2s;
+    }
+    #nav button:hover { color: var(--text); background: var(--border); }
+    #slide-counter {
+      font-size: 12px; color: var(--muted); min-width: 52px; text-align: center;
+      font-weight: 600; letter-spacing: 1px;
+    }
+    .dot-nav {
+      display: flex; gap: 6px; align-items: center;
+    }
+    .dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--muted); cursor: pointer;
+      transition: background .2s, transform .2s;
+    }
+    .dot.active { background: var(--accent); transform: scale(1.5); }
+
+    /* ── Keyboard hint ───────────────────────────────────────────────── */
+    #hint {
+      position: fixed; top: 20px; right: 28px; z-index: 100;
+      font-size: 11px; color: var(--muted);
+    }
+    kbd {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 4px; padding: 2px 6px; font-size: 11px;
+    }
+
+    /* ── Slide number ────────────────────────────────────────────────── */
+    #slide-num-top {
+      position: fixed; top: 20px; left: 28px; z-index: 100;
+      font-size: 11px; color: var(--muted); letter-spacing: 1px;
+    }
+
+    /* ── Animations ──────────────────────────────────────────────────── */
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 20px rgba(124,110,247,0.3); }
+      50%       { box-shadow: 0 0 40px rgba(124,110,247,0.6); }
+    }
+    .glow { animation: pulse-glow 3s infinite; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50%       { transform: translateY(-8px); }
+    }
+    .float { animation: float 4s ease-in-out infinite; }
+  </style>
+</head>
+<body>
+
+<div id="slide-num-top" id="snt">01 / 10</div>
+<div id="hint"><kbd>←</kbd> <kbd>→</kbd> to navigate &nbsp;·&nbsp; <kbd>F</kbd> fullscreen</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 1 — HERO
+════════════════════════════════════════════════════════════════ -->
+<div id="deck">
+<div class="slide slide-hero active" data-idx="0">
+  <div style="text-align:center; max-width:820px;">
+    <div class="logo-wrap" style="justify-content:center; margin-bottom:32px;">
+      <div class="logo-icon float glow">₿</div>
+      <div>
+        <div class="logo-text">Mezo Legacy</div>
+        <div class="logo-sub">BITCOIN LAYER 2 · DEFI PLATFORM</div>
+      </div>
+    </div>
+
+    <div class="tag">Supernormal dApps · MUSD Track · Chain 31611</div>
+    <h1><span class="grad">Borrow MUSD.</span><br/>Keep your Bitcoin.</h1>
+    <div class="divider" style="margin:20px auto;"></div>
+    <p style="max-width:580px; margin:0 auto 32px; font-size:17px;">
+      Self-service Bitcoin banking on Mezo Network — deposit BTC, mint
+      <span style="color:#f59e0b; font-weight:700;">MUSD at 1% fixed APR</span>,
+      deploy for yield, keep full custody. No intermediaries.
+    </p>
+    <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
+      <span class="pill pill-amber">₿ MUSD Integration</span>
+      <span class="pill pill-green">✓ 4 Contracts Live</span>
+      <span class="pill pill-purple">⚡ 37 / 37 Tests Pass</span>
+      <span class="pill pill-blue">◎ PWA · Vercel</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 2 — THE PROBLEM
+════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-problem" data-idx="1">
+  <div style="max-width:900px; width:100%;">
+    <div class="tag">The Problem</div>
+    <h2>Bitcoin sits idle.<br/><span class="grad-orange">It deserves better.</span></h2>
+    <div class="divider"></div>
+    <div class="card-grid card-grid-3" style="margin-top:12px;">
+      <div class="card">
+        <div style="font-size:36px; margin-bottom:12px;">😴</div>
+        <h3 style="color:#f87171;">Dead Capital</h3>
+        <p>Over $600B in BTC earns zero yield. Holders must choose between security and productivity.</p>
+      </div>
+      <div class="card">
+        <div style="font-size:36px; margin-bottom:12px;">🔗</div>
+        <h3 style="color:#f59e0b;">Fragmented L2s</h3>
+        <p>Existing Bitcoin L2s lack EVM compatibility, making them hard to build on and difficult to use.</p>
+      </div>
+      <div class="card">
+        <div style="font-size:36px; margin-bottom:12px;">🧩</div>
+        <h3 style="color:#38bdf8;">No Native DeFi</h3>
+        <p>Wrapped BTC on Ethereum introduces custodial risk. There's no native BTC DeFi layer.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 3 — THE SOLUTION
+════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-solution" data-idx="2">
+  <div style="max-width:900px; width:100%;">
+    <div class="tag">The Solution</div>
+    <h2>Bitcoin-Backed MUSD<br/><span class="grad">+ Self-Service Banking</span></h2>
+    <div class="divider"></div>
+    <div class="card-grid card-grid-2">
+      <div>
+        <ul class="feat-list">
+          <li>
+            <div class="feat-icon" style="background:rgba(245,158,11,0.12);">₿</div>
+            <div>
+              <div class="feat-title">MezoBorrow — MUSD at 1%</div>
+              Deposit BTC collateral → mint MUSD stablecoin at 1% fixed APR. No lock-up. Close any time. Full self-custody.
+            </div>
+          </li>
+          <li>
+            <div class="feat-icon">🏦</div>
+            <div>
+              <div class="feat-title">MezoVault — BTC Savings</div>
+              Deposit native BTC into an auditable on-chain vault. Live TVL read every 12 seconds.
+            </div>
+          </li>
+          <li>
+            <div class="feat-icon">🔥</div>
+            <div>
+              <div class="feat-title">MezoStaking — 4.8% APY</div>
+              Stake BTC, earn yield. No lock-up. Deploy MUSD elsewhere for even higher returns.
+            </div>
+          </li>
+        </ul>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px;">
+        <div class="card" style="border-color:rgba(245,158,11,0.4); background:rgba(245,158,11,0.06);">
+          <div class="stat-val" style="color:#f59e0b;">1%</div>
+          <div class="stat-lbl">Fixed MUSD Borrow APR</div>
+        </div>
+        <div class="card" style="border-color:rgba(34,211,168,0.3);">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div><div class="stat-val green" style="font-size:22px;">4–8%</div><div class="stat-lbl">MUSD yield potential</div></div>
+            <div style="font-size:28px; color:var(--green);">→</div>
+            <div><div class="stat-val green" style="font-size:22px;">+3–7%</div><div class="stat-lbl">Net carry trade</div></div>
+          </div>
+        </div>
+        <div class="card" style="border-color:rgba(124,110,247,0.3);">
+          <div class="stat-val highlight">150%</div>
+          <div class="stat-lbl">Min Collateral Ratio</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 4 — TECH STACK
+════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-tech" data-idx="3">
+  <div style="max-width:900px; width:100%;">
+    <div class="tag">Technology</div>
+    <h2>Built with<br/><span class="grad">Production-Grade Stack</span></h2>
+    <div class="divider"></div>
+    <div class="card-grid card-grid-4">
+      <div class="card" style="text-align:center; padding:20px 16px;">
+        <div style="font-size:28px; margin-bottom:8px;">⚛️</div>
+        <div style="font-size:13px; font-weight:700;">React 18</div>
+        <div style="font-size:11px; color:var(--muted);">TypeScript + Vite</div>
+      </div>
+      <div class="card" style="text-align:center; padding:20px 16px;">
+        <div style="font-size:28px; margin-bottom:8px;">⛓</div>
+        <div style="font-size:13px; font-weight:700;">Wagmi v2</div>
+        <div style="font-size:11px; color:var(--muted);">Viem v2 + ethers</div>
+      </div>
+      <div class="card" style="text-align:center; padding:20px 16px;">
+        <div style="font-size:28px; margin-bottom:8px;">👛</div>
+        <div style="font-size:13px; font-weight:700;">Wagmi v2</div>
+        <div style="font-size:11px; color:var(--muted);">MetaMask + WalletConnect</div>
+      </div>
+      <div class="card" style="text-align:center; padding:20px 16px;">
+        <div style="font-size:28px; margin-bottom:8px;">🔨</div>
+        <div style="font-size:13px; font-weight:700;">Hardhat</div>
+        <div style="font-size:11px; color:var(--muted);">Solidity 0.8.24</div>
+      </div>
+      <div class="card" style="text-align:center; padding:20px 16px;">
+        <div style="font-size:28px; margin-bottom:8px;">₿</div>
+        <div style="font-size:13px; font-weight:700;">Mezo Network</div>
+        <div style="font-size:11px; color:var(--muted);">EVM · Chain 31611</div>
+      </div>
+      <div class="card" style="text-align:center; padding:20px 16px;">
+        <div style="font-size:28px; margin-bottom:8px;">📈</div>
+        <div style="font-size:13px; font-weight:700;">Recharts</div>
+        <div style="font-size:11px; color:var(--muted);">Live price charts</div>
+      </div>
+      <div class="card" style="text-align:center; padding:20px 16px;">
+        <div style="font-size:28px; margin-bottom:8px;">🚀</div>
+        <div style="font-size:13px; font-weight:700;">Vercel</div>
+        <div style="font-size:11px; color:var(--muted);">CI/CD · Edge deploy</div>
+      </div>
+      <div class="card" style="text-align:center; padding:20px 16px;">
+        <div style="font-size:28px; margin-bottom:8px;">🗂</div>
+        <div style="font-size:13px; font-weight:700;">Turborepo</div>
+        <div style="font-size:11px; color:var(--muted);">npm workspaces</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 5 — SMART CONTRACTS
+════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-contracts" data-idx="4">
+  <div style="max-width:940px; width:100%;">
+    <div class="tag">Smart Contracts · 4 Deployed · Mezo Testnet</div>
+    <h2>MUSD + BTC Protocol<br/><span class="grad">All On-Chain</span></h2>
+    <div class="divider"></div>
+    <div class="card-grid card-grid-2" style="gap:14px;">
+      <div class="card" style="border-color:rgba(245,158,11,0.4); padding:18px 20px;">
+        <h3 style="color:#f59e0b;">₿ MezoMUSD.sol — ERC-20</h3>
+        <div class="addr" style="margin:8px 0; font-size:10px;">0xf4a9B1F29599d519700893f34e4cc669CD550341</div>
+        <pre style="font-size:11px; padding:10px 14px;"><span class="fn">mint</span>(<span class="kw">address</span> to, <span class="kw">uint256</span> amt) <span class="cmt">// vault only</span>
+<span class="fn">burn</span>(<span class="kw">address</span> from, <span class="kw">uint256</span> amt)<span class="cmt">// vault only</span>
+<span class="fn">transfer</span> / <span class="fn">approve</span> / <span class="fn">transferFrom</span></pre>
+        <span class="pill pill-amber" style="font-size:10px;">✓ Bitcoin-backed stablecoin</span>
+      </div>
+      <div class="card" style="border-color:rgba(124,110,247,0.4); padding:18px 20px;">
+        <h3 class="highlight">🏦 MezoBorrow.sol</h3>
+        <div class="addr" style="margin:8px 0; font-size:10px;">0xeb1A838a9dD91eE9A3D15f21C6b1144ebcFB287a</div>
+        <pre style="font-size:11px; padding:10px 14px;"><span class="fn">borrow</span>(<span class="kw">uint256</span> musdAmt) <span class="kw">payable</span> <span class="cmt">// BTC→MUSD</span>
+<span class="fn">repay</span>(<span class="kw">uint256</span> musdAmt)         <span class="cmt">// MUSD→BTC</span>
+<span class="fn">addCollateral</span>() <span class="kw">payable</span>         <span class="cmt">// top-up CR</span>
+<span class="fn">closePosition</span>()                  <span class="cmt">// exit all</span>
+<span class="fn">getPosition</span>(user) → CR + debt    <span class="cmt">// view</span></pre>
+        <span class="pill pill-purple" style="font-size:10px;">✓ 1% APR · 150% min CR · CEI</span>
+      </div>
+      <div class="card" style="border-color:rgba(34,211,168,0.3); padding:14px 18px;">
+        <h3 class="green" style="font-size:14px;">🏦 MezoVault</h3>
+        <div class="addr" style="margin:6px 0; font-size:10px;">0xc33C49f40f75996EA3166eF94C3920b2547BD66D</div>
+        <span class="pill pill-green" style="font-size:10px;">deposit · withdraw · TVL</span>
+      </div>
+      <div class="card" style="border-color:rgba(56,189,248,0.3); padding:14px 18px;">
+        <h3 class="blue" style="font-size:14px;">🔥 MezoStaking</h3>
+        <div class="addr" style="margin:6px 0; font-size:10px;">0xf4eA8B5aBd6D2E1CBf865bC8E780C70Fc4Cf3c46</div>
+        <span class="pill pill-blue" style="font-size:10px;">stake · unstake · 4.8% APY</span>
+      </div>
+    </div>
+    <div style="margin-top:14px; text-align:center;">
+      <span class="pill pill-green" style="font-size:12px;">✓ 37 / 37 Hardhat Tests · EVM: paris · Solidity 0.8.24 · Chain 31611</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 6 — ARCHITECTURE
+════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-arch" data-idx="5">
+  <div style="max-width:860px; width:100%;">
+    <div class="tag">Architecture</div>
+    <h2>Monorepo &<br/><span class="grad">Full-Stack Design</span></h2>
+    <div class="divider"></div>
+
+    <!-- Layer diagram -->
+    <div style="display:flex; flex-direction:column; gap:12px; margin-bottom:24px;">
+      <div style="text-align:center; font-size:11px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;">User Layer</div>
+      <div class="arch-row">
+        <div class="arch-box" style="border-color:rgba(56,189,248,0.3);">
+          <div class="arch-label blue">Browser / MetaMask</div>
+          <div class="arch-sub">Wallet connection via Wagmi v2</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:rgba(124,110,247,0.3);">
+          <div class="arch-label highlight">React dApp</div>
+          <div class="arch-sub">Vercel · SPA · code-split chunks</div>
+        </div>
+        <div class="arch-arrow">→</div>
+        <div class="arch-box" style="border-color:rgba(245,158,11,0.3);">
+          <div class="arch-label highlight2">Wagmi v2</div>
+          <div class="arch-sub">Reads + writes + tx receipts</div>
+        </div>
+      </div>
+      <div style="text-align:center; font-size:20px; color:var(--muted);">↓</div>
+      <div class="arch-row">
+        <div class="arch-box" style="border-color:rgba(34,211,168,0.3); flex:2;">
+          <div class="arch-label green">Mezo Testnet RPC  ·  Chain 31611</div>
+          <div class="arch-sub">https://rpc.test.mezo.org &nbsp;·&nbsp; EVM-compatible Bitcoin L2</div>
+        </div>
+      </div>
+      <div style="text-align:center; font-size:20px; color:var(--muted);">↓</div>
+      <div class="arch-row">
+        <div class="arch-box" style="border-color:rgba(245,158,11,0.4);">
+          <div class="arch-label highlight2">MezoMUSD.sol</div>
+          <div class="arch-sub">ERC-20 · mint · burn</div>
+        </div>
+        <div class="arch-arrow" style="color:var(--border);">·</div>
+        <div class="arch-box" style="border-color:rgba(124,110,247,0.3);">
+          <div class="arch-label highlight">MezoBorrow.sol</div>
+          <div class="arch-sub">1% APR · CR · collateral</div>
+        </div>
+        <div class="arch-arrow" style="color:var(--border);">·</div>
+        <div class="arch-box" style="border-color:rgba(34,211,168,0.3);">
+          <div class="arch-label green">Vault + Staking</div>
+          <div class="arch-sub">TVL · stake · rewards</div>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;">
+      <span class="pill pill-purple" style="font-size:11px;">apps/web-app</span>
+      &nbsp;·&nbsp;
+      <span class="pill pill-amber" style="font-size:11px;">packages/contracts</span>
+      &nbsp;·&nbsp;
+      <span class="pill pill-blue" style="font-size:11px;">packages/shared</span>
+      &nbsp;·&nbsp;
+      <span class="pill pill-green" style="font-size:11px;">Turborepo monorepo</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 7 — KEY FEATURES
+════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-features" data-idx="6">
+  <div style="max-width:900px; width:100%;">
+    <div class="tag">Key Features</div>
+    <h2>Everything a<br/><span class="grad">Bitcoin DeFi User Needs</span></h2>
+    <div class="divider"></div>
+    <div class="card-grid card-grid-2">
+      <ul class="feat-list">
+        <li>
+          <div class="feat-icon" style="background:rgba(245,158,11,0.15);">₿</div>
+          <div>
+            <div class="feat-title" style="color:#f59e0b;">Borrow MUSD — 1% APR</div>
+            Deposit BTC collateral → mint MUSD stablecoin · live CR health bar · repay any time
+          </div>
+        </li>
+        <li>
+          <div class="feat-icon">⊞</div>
+          <div>
+            <div class="feat-title">Dashboard</div>
+            Portfolio overview · live BTC price chart · MUSD balance · carry-trade metrics
+          </div>
+        </li>
+        <li>
+          <div class="feat-icon">🏦</div>
+          <div>
+            <div class="feat-title">Vault Page</div>
+            Deposit & withdraw BTC via MezoVault · live on-chain TVL read
+          </div>
+        </li>
+      </ul>
+      <ul class="feat-list">
+        <li>
+          <div class="feat-icon">🔥</div>
+          <div>
+            <div class="feat-title">Staking Page</div>
+            Stake & unstake via MezoStaking · 4.8% APY · rewards history chart
+          </div>
+        </li>
+        <li>
+          <div class="feat-icon">◷</div>
+          <div>
+            <div class="feat-title">Transaction History</div>
+            Full activity log · Borrow / Repay types · links to Mezo explorer
+          </div>
+        </li>
+        <li>
+          <div class="feat-icon">🔄</div>
+          <div>
+            <div class="feat-title">Live Chain Data · PWA</div>
+            Block · gas · BTC/USD — auto-refresh every 12 s · installable as PWA
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 8 — HACKATHON JUDGING CRITERIA
+════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-metrics" data-idx="7">
+  <div style="max-width:900px; width:100%;">
+    <div class="tag">Hackathon Judging · MUSD Track</div>
+    <h2>How We Score<br/><span class="grad">Across All Criteria</span></h2>
+    <div class="divider"></div>
+    <!-- 5 criteria bars -->
+    <div style="display:flex; flex-direction:column; gap:14px;">
+
+      <!-- 30% Mezo Integration -->
+      <div class="card" style="padding:16px 22px; border-color:rgba(245,158,11,0.45);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div style="font-size:14px; font-weight:700; color:#f59e0b;">₿ Mezo Integration &amp; MUSD Usage</div>
+          <div style="font-size:14px; font-weight:800; color:#f59e0b;">30%</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.06); border-radius:6px; height:8px; overflow:hidden;">
+          <div style="width:100%; height:100%; background:linear-gradient(90deg,#f59e0b,#fbbf24); border-radius:6px;"></div>
+        </div>
+        <div style="font-size:12px; color:var(--muted); margin-top:6px;">MezoBorrow contract · MezoMUSD ERC-20 · 1% APR · 150% min CR · full borrow/repay/close UI</div>
+      </div>
+
+      <!-- 30% Business Viability -->
+      <div class="card" style="padding:16px 22px; border-color:rgba(34,211,168,0.4);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div style="font-size:14px; font-weight:700; color:var(--green);">📈 Business Viability &amp; Market Fit</div>
+          <div style="font-size:14px; font-weight:800; color:var(--green);">30%</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.06); border-radius:6px; height:8px; overflow:hidden;">
+          <div style="width:95%; height:100%; background:linear-gradient(90deg,#22d3a8,#34d399); border-radius:6px;"></div>
+        </div>
+        <div style="font-size:12px; color:var(--muted); margin-top:6px;">Borrow at 1% → deploy MUSD for 4–8% yield → +3–7% net carry trade · no lock-up · self-custody BTC</div>
+      </div>
+
+      <!-- 20% Technical Implementation -->
+      <div class="card" style="padding:16px 22px; border-color:rgba(124,110,247,0.4);">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div style="font-size:14px; font-weight:700; color:var(--accent);">🔨 Technical Implementation</div>
+          <div style="font-size:14px; font-weight:800; color:var(--accent);">20%</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.06); border-radius:6px; height:8px; overflow:hidden;">
+          <div style="width:100%; height:100%; background:linear-gradient(90deg,#7c6ef7,#a78bfa); border-radius:6px;"></div>
+        </div>
+        <div style="font-size:12px; color:var(--muted); margin-top:6px;">37 / 37 Hardhat tests · CEI + reentrancy guards · TypeScript strict · 4 contracts live · Turborepo monorepo</div>
+      </div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+        <!-- 10% UX -->
+        <div class="card" style="padding:14px 18px; border-color:rgba(56,189,248,0.35);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <div style="font-size:13px; font-weight:700; color:var(--blue);">✨ UX &amp; Design</div>
+            <div style="font-size:13px; font-weight:800; color:var(--blue);">10%</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.06); border-radius:6px; height:6px; overflow:hidden;">
+            <div style="width:92%; height:100%; background:var(--blue); border-radius:6px;"></div>
+          </div>
+          <div style="font-size:11px; color:var(--muted); margin-top:6px;">PWA installable · live data · CR health bar · dark UI · mobile responsive</div>
+        </div>
+        <!-- 10% Presentation -->
+        <div class="card" style="padding:14px 18px; border-color:rgba(168,85,247,0.35);">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <div style="font-size:13px; font-weight:700; color:#c084fc;">🎤 Presentation</div>
+            <div style="font-size:13px; font-weight:800; color:#c084fc;">10%</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.06); border-radius:6px; height:6px; overflow:hidden;">
+            <div style="width:100%; height:100%; background:#c084fc; border-radius:6px;"></div>
+          </div>
+          <div style="font-size:11px; color:var(--muted); margin-top:6px;">This deck · interactive HTML · problem → solution → live demo → roadmap</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 9 — ROADMAP
+════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-roadmap" data-idx="8">
+  <div style="max-width:860px; width:100%;">
+    <div class="tag">Roadmap</div>
+    <h2>What's Next for<br/><span class="grad-orange">Mezo Legacy</span></h2>
+    <div class="divider"></div>
+    <div class="card-grid card-grid-2">
+      <div class="timeline">
+        <div class="tl-item">
+          <div class="tl-dot done"></div>
+          <div>
+            <div class="tl-label" style="color:var(--green);">Phase 1 — Complete ✓</div>
+            <div class="tl-desc">MezoMUSD + MezoBorrow + Vault + Staking deployed · BorrowPage live · 37 tests · PWA · Vercel</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot now"></div>
+          <div>
+            <div class="tl-label" style="color:var(--accent);">Phase 2 — In Progress</div>
+            <div class="tl-desc">Contract verification on Mezo Explorer · MUSD yield integrations · liquidation engine · price oracle</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot next"></div>
+          <div>
+            <div class="tl-label" style="color:var(--accent2);">Phase 3 — Planned</div>
+            <div class="tl-desc">Multi-asset vault support · Governance token · DAO voting module · Cross-chain bridge</div>
+          </div>
+        </div>
+        <div class="tl-item">
+          <div class="tl-dot future"></div>
+          <div>
+            <div class="tl-label" style="color:var(--muted);">Phase 4 — Future</div>
+            <div class="tl-desc">Mainnet launch · Institutional vault tiers · BTC yield aggregator · SDK for developers</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:14px; justify-content:center;">
+        <div class="card" style="border-color:rgba(34,211,168,0.3);">
+          <div style="font-size:13px; font-weight:700; color:var(--green); margin-bottom:6px;">🌐 Live Now</div>
+          <div style="font-size:12px; color:var(--muted);">web-app-ainegb.vercel.app</div>
+        </div>
+        <div class="card" style="border-color:rgba(124,110,247,0.3);">
+          <div style="font-size:13px; font-weight:700; color:var(--accent); margin-bottom:6px;">📱 Mobile (Flutter)</div>
+          <div style="font-size:12px; color:var(--muted);">iOS + Android · apps/mobile-app</div>
+        </div>
+        <div class="card" style="border-color:rgba(245,158,11,0.3);">
+          <div style="font-size:13px; font-weight:700; color:var(--accent2); margin-bottom:6px;">🔍 Explorer</div>
+          <div style="font-size:12px; color:var(--muted);">explorer.test.mezo.org</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     SLIDE 10 — CTA / CLOSE
+════════════════════════════════════════════════════════════════ -->
+<div class="slide slide-cta" data-idx="9">
+  <div style="text-align:center; max-width:760px;">
+    <div class="logo-icon float glow" style="width:72px; height:72px; border-radius:18px; font-size:36px; margin:0 auto 28px;">₿</div>
+    <div class="tag">Get Started Today</div>
+    <h1><span class="grad">Mezo Legacy</span><br/>is live.</h1>
+    <div class="divider" style="margin:20px auto;"></div>
+    <p style="font-size:17px; max-width:560px; margin:0 auto 28px;">
+      Connect your wallet · deposit BTC · mint <span style="color:#f59e0b; font-weight:700;">MUSD at 1%</span> · deploy for yield.<br/>
+      Self-service banking on <span class="highlight">Mezo Network</span> — Bitcoin's DeFi layer.
+    </p>
+
+    <div style="display:flex; flex-direction:column; gap:8px; align-items:center; margin-bottom:28px;">
+      <div style="font-size:14px; color:var(--muted);">🌐 &nbsp;<span style="color:var(--accent);">https://mezo-legacy-ainegb.vercel.app</span></div>
+      <div style="font-size:13px; color:var(--muted);">₿ MUSD &nbsp;<span style="color:var(--green); font-family:monospace; font-size:11px;">0xf4a9B1F29599d519700893f34e4cc669CD550341</span></div>
+      <div style="font-size:13px; color:var(--muted);">🏦 Borrow &nbsp;<span style="color:var(--green); font-family:monospace; font-size:11px;">0xeb1A838a9dD91eE9A3D15f21C6b1144ebcFB287a</span></div>
+      <div style="font-size:13px; color:var(--muted);">🔍 &nbsp;<span style="color:var(--sub);">explorer.test.mezo.org · Chain 31611</span></div>
+    </div>
+
+    <div style="display:flex; gap:10px; justify-content:center; flex-wrap:wrap;">
+      <span class="pill pill-amber">₿ MezoMUSD</span>
+      <span class="pill pill-purple">🏦 MezoBorrow</span>
+      <span class="pill pill-green">🔒 MezoVault</span>
+      <span class="pill pill-blue">🔥 MezoStaking</span>
+      <span class="pill pill-green">⚡ Chain 31611</span>
+    </div>
+
+    <p style="margin-top:28px; font-size:12px; color:var(--muted);">
+      Mezo Legacy · MIT License · Supernormal dApps — MUSD Track · Built with ❤️ on Bitcoin L2
+    </p>
+  </div>
+</div>
+
+</div><!-- end #deck -->
+
+<!-- ── Navigation ──────────────────────────────────────────────────── -->
+<div id="nav">
+  <button id="prev-btn" onclick="goTo(current-1)" title="Previous">←</button>
+  <div class="dot-nav" id="dot-nav"></div>
+  <span id="slide-counter">01 / 10</span>
+  <button id="next-btn" onclick="goTo(current+1)" title="Next">→</button>
+</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  const total  = slides.length;
+  let current  = 0;
+  let animating = false;
+
+  // Build dots
+  const dotNav = document.getElementById('dot-nav');
+  slides.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    d.onclick = () => goTo(i);
+    dotNav.appendChild(d);
+  });
+
+  function goTo(n) {
+    if (animating) return;
+    if (n < 0 || n >= total) return;
+    animating = true;
+
+    slides[current].classList.add('exit');
+    slides[current].classList.remove('active');
+
+    setTimeout(() => {
+      slides[current].classList.remove('exit');
+      current = n;
+      slides[current].classList.add('active');
+      updateUI();
+      setTimeout(() => { animating = false; }, 450);
+    }, 200);
+  }
+
+  function updateUI() {
+    document.getElementById('slide-counter').textContent =
+      String(current + 1).padStart(2, '0') + ' / ' + String(total).padStart(2, '0');
+    document.getElementById('snt').textContent =
+      String(current + 1).padStart(2, '0') + ' / ' + String(total).padStart(2, '0');
+    document.querySelectorAll('.dot').forEach((d, i) => {
+      d.classList.toggle('active', i === current);
+    });
+  }
+
+  // Keyboard
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ')  { e.preventDefault(); goTo(current + 1); }
+    if (e.key === 'ArrowLeft')                     { e.preventDefault(); goTo(current - 1); }
+    if (e.key === 'f' || e.key === 'F')            { toggleFullscreen(); }
+    if (e.key === 'Home')                          { goTo(0); }
+    if (e.key === 'End')                           { goTo(total - 1); }
+  });
+
+  // Touch swipe
+  let touchStart = 0;
+  document.addEventListener('touchstart', e => { touchStart = e.touches[0].clientX; });
+  document.addEventListener('touchend',   e => {
+    const dx = touchStart - e.changedTouches[0].clientX;
+    if (Math.abs(dx) > 60) goTo(current + (dx > 0 ? 1 : -1));
+  });
+
+  // Fullscreen
+  function toggleFullscreen() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+    else document.exitFullscreen();
+  }
+
+  updateUI();
+</script>
+</body>
+</html>
