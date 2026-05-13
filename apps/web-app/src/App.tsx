@@ -8,54 +8,54 @@ import {
 import { parseEther, formatEther } from 'viem';
 import {
   AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer,
-  CartesianGrid, BarChart, Bar, LineChart, Line
+  CartesianGrid, BarChart, Bar
 } from 'recharts';
 import { STAKING_ADDRESS, STAKING_ABI } from './constants/staking';
+import { VAULT_ADDRESS, VAULT_ABI }     from './constants/contract';
+import { MUSD_ADDRESS, MUSD_ABI, BORROW_ADDRESS, BORROW_ABI } from './constants/musd';
+import { useLiveChainData } from './hooks/useLiveChainData';
 import './App.css';
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 interface TransactionRecord {
   id: string;
-  type: 'Send' | 'Stake' | 'Withdraw';
+  type: 'Send' | 'Stake' | 'Withdraw' | 'Deposit' | 'Borrow' | 'Repay';
   amount: string;
   status: 'Pending' | 'Success';
   hash: string;
   timestamp: number;
 }
 
-// ─── Mock Data ────────────────────────────────────────────────────────────────
+// ─── Mock / Fallback Data ─────────────────────────────────────────────────────
 
-const priceData = [
-  { time: '00:00', price: 3200 }, { time: '04:00', price: 3150 },
-  { time: '08:00', price: 3300 }, { time: '12:00', price: 3280 },
-  { time: '16:00', price: 3450 }, { time: '20:00', price: 3400 },
-  { time: '24:00', price: 3512 },
+const FALLBACK_PRICE_DATA = [
+  { time: '00:00', price: 93200 }, { time: '04:00', price: 92800 },
+  { time: '08:00', price: 94100 }, { time: '12:00', price: 95400 },
+  { time: '16:00', price: 96200 }, { time: '20:00', price: 95800 },
+  { time: '24:00', price: 97500 },
 ];
 
 const rewardsData = [
-  { week: 'W1', amount: 0.012 }, { week: 'W2', amount: 0.018 },
-  { week: 'W3', amount: 0.020 }, { week: 'W4', amount: 0.022 },
+  { week: 'W1', amount: 0.00012 }, { week: 'W2', amount: 0.00018 },
+  { week: 'W3', amount: 0.00020 }, { week: 'W4', amount: 0.00022 },
 ];
-
 const volumeData = [
-  { day: 'Mon', vol: 0.8 }, { day: 'Tue', vol: 1.2 }, { day: 'Wed', vol: 0.4 },
-  { day: 'Thu', vol: 1.8 }, { day: 'Fri', vol: 0.6 }, { day: 'Sat', vol: 2.1 },
-  { day: 'Sun', vol: 1.5 },
+  { day: 'Mon', vol: 0.008 }, { day: 'Tue', vol: 0.012 }, { day: 'Wed', vol: 0.004 },
+  { day: 'Thu', vol: 0.018 }, { day: 'Fri', vol: 0.006 }, { day: 'Sat', vol: 0.021 },
+  { day: 'Sun', vol: 0.015 },
 ];
-
 const yieldData = Array.from({ length: 12 }, (_, i) => ({
   month: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][i],
-  yield: +(1.5 * Math.pow(1 + 0.048 / 12, i + 1)).toFixed(4),
+  yield: +(0.015 * Math.pow(1 + 0.048 / 12, i + 1)).toFixed(6),
 }));
 
 const MOCK_HISTORY: TransactionRecord[] = [
-  { id: '1', type: 'Stake',    amount: '0.50', status: 'Success', hash: '0x4fe2a91c', timestamp: Date.now() - 120000 },
-  { id: '2', type: 'Withdraw', amount: '0.20', status: 'Success', hash: '0x8b1dc44e', timestamp: Date.now() - 3600000 },
-  { id: '3', type: 'Send',     amount: '0.05', status: 'Pending', hash: '0x2ca7f12b', timestamp: Date.now() - 10800000 },
-  { id: '4', type: 'Stake',    amount: '1.00', status: 'Success', hash: '0x9e3ad77c', timestamp: Date.now() - 18000000 },
-  { id: '5', type: 'Send',     amount: '0.10', status: 'Success', hash: '0x7d2f88ab', timestamp: Date.now() - 86400000 },
-  { id: '6', type: 'Stake',    amount: '0.25', status: 'Success', hash: '0x3a1ecc91', timestamp: Date.now() - 172800000 },
+  { id: '1', type: 'Borrow',  amount: '500.00',  status: 'Success', hash: '0x4fe2a91c3d8b7e2a', timestamp: Date.now() - 120000   },
+  { id: '2', type: 'Stake',   amount: '0.0050',  status: 'Success', hash: '0x8b1dc44e9a3f1c2d', timestamp: Date.now() - 3600000  },
+  { id: '3', type: 'Deposit', amount: '0.0020',  status: 'Success', hash: '0x2ca7f12b8e4d9a3c', timestamp: Date.now() - 10800000 },
+  { id: '4', type: 'Repay',   amount: '100.00',  status: 'Success', hash: '0x9e3ad77c1f2b8d4e', timestamp: Date.now() - 18000000 },
+  { id: '5', type: 'Send',    amount: '0.0005',  status: 'Pending', hash: '0x7d2f88ab3c9e1f5d', timestamp: Date.now() - 86400000 },
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -68,13 +68,16 @@ function timeAgo(ts: number) {
   return `${Math.floor(s / 86400)}d ago`;
 }
 
-const TX_META: Record<string, { icon: string; color: string; label: string }> = {
-  Stake:    { icon: '🔥', color: 'var(--accent2)',   label: 'Stake' },
-  Withdraw: { icon: '↙',  color: 'var(--blue)',      label: 'Withdraw' },
-  Send:     { icon: '↗',  color: 'var(--green)',     label: 'Send' },
+const TX_META: Record<string, { icon: string; color: string }> = {
+  Stake:    { icon: '🔥', color: 'var(--accent2)'  },
+  Withdraw: { icon: '↙',  color: 'var(--blue)'     },
+  Send:     { icon: '↗',  color: 'var(--green)'    },
+  Deposit:  { icon: '⬇',  color: 'var(--accent)'   },
+  Borrow:   { icon: '₿',  color: '#f59e0b'         },
+  Repay:    { icon: '✓',  color: 'var(--green)'    },
 };
 
-// ─── Custom Tooltip ───────────────────────────────────────────────────────────
+// ─── Tooltip ─────────────────────────────────────────────────────────────────
 
 const ChartTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null;
@@ -82,29 +85,59 @@ const ChartTooltip = ({ active, payload, label }: any) => {
     <div className="chart-tooltip">
       <p className="tooltip-label">{label}</p>
       <p className="tooltip-val">{typeof payload[0].value === 'number' && payload[0].value > 100
-        ? `$${payload[0].value.toLocaleString()}`
-        : `${payload[0].value} ETH`
-      }</p>
+        ? `$${payload[0].value.toLocaleString()}` : `${payload[0].value} BTC`}</p>
     </div>
   );
 };
 
+// ─── Shared sub-components ────────────────────────────────────────────────────
+
+function MetricCard({ label, value, sub, change, changeDir, accent }: any) {
+  return (
+    <div className={`metric-card${accent ? ' accent' : ''}`}>
+      <div className="metric-label">{label}</div>
+      <div className="metric-value">{value}</div>
+      {sub    && <div className="metric-sub">{sub}</div>}
+      {change && <div className={`metric-change ${changeDir}`}>{changeDir === 'up' ? '↑' : '↓'} {change}</div>}
+    </div>
+  );
+}
+
+function TopBar({ title, blockNumber, gasPriceGwei }: { title: string; blockNumber?: bigint; gasPriceGwei?: number }) {
+  return (
+    <div className="topbar">
+      <div>
+        <h1 className="page-title">{title}</h1>
+        <p className="page-sub">Mezo Testnet (Chain 31611) · Auto-refreshing</p>
+      </div>
+      <div className="topbar-right">
+        <div className="pill amber"><span className="blink">◉</span> Block {blockNumber ? `#${blockNumber.toLocaleString()}` : '#...'}</div>
+        <div className="pill green"><span>●</span> Mezo · {gasPriceGwei ?? 0} gwei</div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-function Sidebar({ address, isConnected, balance, onConnect, onDisconnect, connectors }: any) {
+function Sidebar({ address, isConnected, balance, musdBalance, onConnect, onDisconnect, connectors }: any) {
   const location = useLocation();
   const links = [
-    { to: '/',         label: 'Dashboard', icon: '⊞', badge: null },
-    { to: '/staking',  label: 'Staking',   icon: '🔥', badge: '4.8%' },
-    { to: '/history',  label: 'History',   icon: '◷',  badge: null },
-    { to: '/analysis', label: 'Analysis',  icon: '↗',  badge: null },
+    { to: '/',        label: 'Dashboard', icon: '⊞', badge: null       },
+    { to: '/borrow',  label: 'Borrow',    icon: '₿',  badge: '1% APR'  },
+    { to: '/vault',   label: 'Vault',     icon: '🏦', badge: null       },
+    { to: '/staking', label: 'Staking',   icon: '🔥', badge: '4.8%'    },
+    { to: '/history', label: 'History',   icon: '◷',  badge: null       },
+    { to: '/analysis',label: 'Analysis',  icon: '↗',  badge: null       },
   ];
+  const musdFmt = musdBalance ? parseFloat(formatEther(musdBalance as bigint)).toFixed(2) : '0.00';
+
   return (
     <aside className="sidebar">
       <div className="sidebar-glow" />
       <div className="logo-area">
         <div className="logo"><span className="logo-dot" />Mezo Legacy</div>
-        <div className="logo-sub">Sepolia Testnet · v2.4.1</div>
+        <div className="logo-sub">Mezo Testnet · v1.0.0</div>
       </div>
       <nav className="nav">
         <div className="nav-section-label">Main</div>
@@ -126,9 +159,12 @@ function Sidebar({ address, isConnected, balance, onConnect, onDisconnect, conne
               <span className="online-dot" />
               {address?.slice(0, 6)}...{address?.slice(-4)}
             </div>
-            <div className="wallet-bal">{parseFloat(balance?.formatted || '0').toFixed(4)} ETH</div>
+            <div className="wallet-bal">{parseFloat(balance?.formatted || '0').toFixed(6)} BTC</div>
+            <div style={{ fontSize: 11, color: '#f59e0b', fontWeight: 700, margin: '4px 0 8px' }}>
+              {musdFmt} MUSD
+            </div>
             <div className="wallet-usd">
-              ≈ ${(parseFloat(balance?.formatted || '0') * 3512).toLocaleString('en-US', { maximumFractionDigits: 2 })} USD
+              ≈ ${(parseFloat(balance?.formatted || '0') * 97500).toLocaleString('en-US', { maximumFractionDigits: 2 })} USD
             </div>
             <div className="wallet-actions">
               <button className="wallet-btn primary">↑ Send</button>
@@ -150,63 +186,64 @@ function Sidebar({ address, isConnected, balance, onConnect, onDisconnect, conne
   );
 }
 
-// ─── TopBar ───────────────────────────────────────────────────────────────────
+// ─── Dashboard ────────────────────────────────────────────────────────────────
 
-function TopBar({ title }: { title: string }) {
-  return (
-    <div className="topbar">
-      <div>
-        <h1 className="page-title">{title}</h1>
-        <p className="page-sub">Friday, May 8 2026 · Auto-refreshing</p>
-      </div>
-      <div className="topbar-right">
-        <div className="pill amber"><span className="blink">◉</span> Block #7,842,391</div>
-        <div className="pill green"><span>●</span> Sepolia · 12 gwei</div>
-      </div>
-    </div>
-  );
-}
-
-// ─── Metric Card ──────────────────────────────────────────────────────────────
-
-function MetricCard({ label, value, sub, change, changeDir, accent }: any) {
-  return (
-    <div className={`metric-card${accent ? ' accent' : ''}`}>
-      <div className="metric-label">{label}</div>
-      <div className="metric-value">{value}</div>
-      {sub && <div className="metric-sub">{sub}</div>}
-      {change && (
-        <div className={`metric-change ${changeDir}`}>
-          {changeDir === 'up' ? '↑' : '↓'} {change}
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ─── Dashboard Page ───────────────────────────────────────────────────────────
-
-function Dashboard({ balance, staked }: { balance?: string; staked?: string }) {
-  const portfolioUSD = ((parseFloat(balance || '0') + parseFloat(staked || '0')) * 3512).toFixed(2);
+function Dashboard({ balance, staked, vaultBalance, musdBalance, borrowPosition, live }: any) {
+  const btcPrice    = live.ethUsd || 97500;
+  const musdFmt     = musdBalance ? parseFloat(formatEther(musdBalance as bigint)).toFixed(2) : '0.00';
+  const btcDebt     = borrowPosition?.[0] ? Number(formatEther(borrowPosition[0])) : 0;
+  const musdDebt    = borrowPosition?.[1] ? Number(formatEther(borrowPosition[1])) : 0;
+  const cr          = borrowPosition?.[2] ? Number(borrowPosition[2]) : 0;
+  const totalBtc    = parseFloat(balance || '0') + parseFloat(staked || '0') + parseFloat(vaultBalance || '0');
+  const portfolioUSD = (totalBtc * btcPrice + parseFloat(musdFmt)).toFixed(2);
+  const chartData   = live.priceHistory.length ? live.priceHistory : FALLBACK_PRICE_DATA;
 
   return (
     <div className="page-content fade-in">
-      <TopBar title="Overview" />
+      <TopBar title="Overview" blockNumber={live.blockNumber} gasPriceGwei={live.gasPriceGwei} />
       <div className="content-wrap">
 
         {/* Metrics */}
         <div className="metrics-row four-col">
-          <MetricCard label="ETH Balance"    value={`${parseFloat(balance || '0').toFixed(4)}`}  sub="ETH Available"  change="+0.24 today"   changeDir="up" />
-          <MetricCard label="Total Staked"   value={`${parseFloat(staked  || '0').toFixed(4)}`}  sub="ETH Locked"     change="APY 4.8%"      changeDir="up" accent />
-          <MetricCard label="Rewards Earned" value="0.0723"   sub="ETH Earned"     change="+0.0041 this week" changeDir="up" />
-          <MetricCard label="Portfolio USD"  value={`$${Number(portfolioUSD).toLocaleString()}`} sub="Total Value" change="+3.2% 24h" changeDir="up" />
+          <MetricCard label="BTC Balance"   value={`${parseFloat(balance || '0').toFixed(6)}`}      sub="BTC Available"  change="+0.00024 today" changeDir="up" />
+          <MetricCard label="MUSD Balance"  value={`$${musdFmt}`}                                    sub="Bitcoin-backed" change="1% borrow APR"  changeDir="up" accent />
+          <MetricCard label="Staked BTC"    value={`${parseFloat(staked || '0').toFixed(6)}`}        sub="Earning 4.8%"   change="APY 4.8%"       changeDir="up" />
+          <MetricCard label="Portfolio USD" value={`$${Number(portfolioUSD).toLocaleString()}`}      sub="Total Value"    change="+3.2% 24h"      changeDir="up" />
         </div>
+
+        {/* MUSD Borrow Position Banner (shown when active) */}
+        {musdDebt > 0 && (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(245,158,11,0.12), rgba(124,110,247,0.08))',
+            border: '1px solid rgba(245,158,11,0.25)', borderRadius: 14, padding: '18px 24px',
+            display: 'flex', gap: 40, alignItems: 'center', flexWrap: 'wrap'
+          }}>
+            <div>
+              <div style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4 }}>Active Borrow Position</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: '#f59e0b' }}>${musdDebt.toFixed(2)} MUSD</div>
+              <div style={{ fontSize: 12, color: 'var(--sub)' }}>borrowed at 1% APR</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4 }}>BTC Collateral</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: 'var(--accent)' }}>{btcDebt.toFixed(6)} BTC</div>
+              <div style={{ fontSize: 12, color: 'var(--sub)' }}>locked in vault</div>
+            </div>
+            <div>
+              <div style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 4 }}>Collateral Ratio</div>
+              <div style={{ fontSize: 22, fontWeight: 800, color: cr >= 200 ? 'var(--green)' : cr >= 150 ? '#f59e0b' : 'var(--red)' }}>{cr}%</div>
+              <div style={{ fontSize: 12, color: 'var(--sub)' }}>min 150% safe</div>
+            </div>
+            <Link to="/borrow" style={{ marginLeft: 'auto', padding: '10px 22px', background: 'rgba(245,158,11,0.15)', border: '1px solid rgba(245,158,11,0.4)', borderRadius: 10, color: '#f59e0b', textDecoration: 'none', fontWeight: 700, fontSize: 13 }}>
+              Manage Position →
+            </Link>
+          </div>
+        )}
 
         {/* Charts Row */}
         <div className="grid-2-1">
           <div className="card">
             <div className="card-header">
-              <span className="card-title">ETH / USD Price Action</span>
+              <span className="card-title">BTC / USD Price Action</span>
               <div className="tab-row">
                 {['24H','7D','1M'].map((t, i) => (
                   <button key={t} className={`tab${i === 0 ? ' active' : ''}`}
@@ -218,7 +255,7 @@ function Dashboard({ balance, staked }: { balance?: string; staked?: string }) {
             </div>
             <div className="chart-wrap">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={priceData}>
+                <AreaChart data={chartData}>
                   <defs>
                     <linearGradient id="priceGrad" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%"  stopColor="#7c6ef7" stopOpacity={0.25} />
@@ -227,47 +264,38 @@ function Dashboard({ balance, staked }: { balance?: string; staked?: string }) {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                   <XAxis dataKey="time" stroke="#4b5563" tick={{ fill: '#6b7280', fontSize: 11 }} />
-                  <YAxis hide domain={['auto', 'auto']} />
+                  <YAxis hide domain={['auto','auto']} />
                   <Tooltip content={<ChartTooltip />} />
                   <Area type="monotone" dataKey="price" stroke="#7c6ef7" strokeWidth={2} fill="url(#priceGrad)" dot={false} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
             <div className="chart-footer">
-              <div><div className="cf-label">Current</div><div className="cf-val green">$3,512.40</div></div>
-              <div style={{ textAlign: 'right' }}><div className="cf-label">24h Change</div><div className="cf-val green">+$312.40 (+9.8%)</div></div>
+              <div><div className="cf-label">BTC Price</div><div className="cf-val green">${(live.ethUsd || 97500).toLocaleString()}</div></div>
+              <div style={{ textAlign: 'right' }}><div className="cf-label">Network</div><div className="cf-val green">Mezo Testnet</div></div>
             </div>
           </div>
 
           <div className="card">
-            <div className="card-header">
-              <span className="card-title">Allocation</span>
-              <span className="card-meta">3 assets</span>
-            </div>
-            <div className="donut-wrap">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={[{v:52},{v:31},{v:17}]}>
-                  <Area type="monotone" dataKey="v" stroke="#7c6ef7" fill="#7c6ef720" />
-                </AreaChart>
-              </ResponsiveContainer>
-              <div className="donut-center">
-                <div className="donut-pct">100%</div>
-                <div className="donut-lbl">TVL</div>
-              </div>
-            </div>
-            <div className="legend-stack">
+            <div className="card-header"><span className="card-title">MUSD Carry Trade</span></div>
+            <div style={{ padding: '8px 0' }}>
               {[
-                { label: 'Staked ETH', pct: '52%', color: '#7c6ef7' },
-                { label: 'Liquid ETH', pct: '31%', color: '#38bdf8' },
-                { label: 'Rewards',    pct: '17%', color: '#22d3a8' },
-              ].map(l => (
-                <div key={l.label} className="legend-row">
-                  <span className="legend-dot" style={{ background: l.color }} />
-                  <span className="legend-label">{l.label}</span>
-                  <span className="legend-pct">{l.pct}</span>
+                { label: 'Borrow MUSD at', val: '1% APR',  color: '#f59e0b', desc: 'fixed rate' },
+                { label: 'Earn yield at',  val: '4–8%',    color: 'var(--green)', desc: 'DeFi strategies' },
+                { label: 'Net carry',      val: '+3–7%',   color: 'var(--accent)', desc: 'annual yield' },
+              ].map(r => (
+                <div key={r.label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: '1px solid var(--border)' }}>
+                  <div>
+                    <div style={{ fontSize: 13, color: 'var(--sub)' }}>{r.label}</div>
+                    <div style={{ fontSize: 11, color: 'var(--muted)' }}>{r.desc}</div>
+                  </div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: r.color }}>{r.val}</div>
                 </div>
               ))}
             </div>
+            <Link to="/borrow" style={{ display: 'block', marginTop: 14, padding: '10px', textAlign: 'center', background: 'rgba(245,158,11,0.12)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 10, color: '#f59e0b', textDecoration: 'none', fontWeight: 700, fontSize: 13 }}>
+              ₿ Open Borrow Position →
+            </Link>
           </div>
         </div>
 
@@ -282,14 +310,14 @@ function Dashboard({ balance, staked }: { balance?: string; staked?: string }) {
               const meta = TX_META[tx.type];
               return (
                 <div key={tx.id} className="tx-row">
-                  <div className="tx-icon" style={{ color: meta.color, borderColor: meta.color + '30', background: meta.color + '15' }}>
-                    {meta.icon}
-                  </div>
+                  <div className="tx-icon" style={{ color: meta.color, borderColor: meta.color + '30', background: meta.color + '15' }}>{meta.icon}</div>
                   <div className="tx-info">
                     <div className="tx-type">{tx.type}</div>
-                    <div className="tx-hash">{tx.hash} · {timeAgo(tx.timestamp)}</div>
+                    <div className="tx-hash">{tx.hash.slice(0, 14)}... · {timeAgo(tx.timestamp)}</div>
                   </div>
-                  <div className="tx-amount" style={{ color: meta.color }}>{tx.amount} ETH</div>
+                  <div className="tx-amount" style={{ color: meta.color }}>
+                    {tx.type === 'Borrow' || tx.type === 'Repay' ? `$${tx.amount} MUSD` : `${tx.amount} BTC`}
+                  </div>
                   <div className={`tx-status ${tx.status.toLowerCase()}`}>{tx.status}</div>
                 </div>
               );
@@ -303,9 +331,9 @@ function Dashboard({ balance, staked }: { balance?: string; staked?: string }) {
             </div>
             <div className="gas-stack">
               {[
-                { speed: 'Slow',     gwei: 9,  time: '~3 min', cls: 'green' },
-                { speed: 'Standard', gwei: 12, time: '~30 sec', cls: 'amber' },
-                { speed: 'Fast',     gwei: 18, time: '~10 sec', cls: 'red' },
+                { speed: 'Slow',     gwei: Math.max(1, (live.gasPriceGwei || 3) - 2), time: '~3 min', cls: 'green' },
+                { speed: 'Standard', gwei: live.gasPriceGwei || 3,                     time: '~30 sec', cls: 'amber' },
+                { speed: 'Fast',     gwei: (live.gasPriceGwei || 3) + 5,               time: '~10 sec', cls: 'red'   },
               ].map(g => (
                 <div key={g.speed} className={`gas-row ${g.cls}`}>
                   <span className="gas-speed">{g.speed}</span>
@@ -315,10 +343,10 @@ function Dashboard({ balance, staked }: { balance?: string; staked?: string }) {
               ))}
             </div>
             <div className="staking-mini">
-              <div className="sm-header">Staking Overview</div>
-              <div className="sm-row"><span>Staked</span><span>{parseFloat(staked || '0').toFixed(4)} ETH</span></div>
-              <div className="sm-row"><span>APY</span><span className="green">4.8%</span></div>
-              <div className="sm-row"><span>Next reward</span><span>~8h</span></div>
+              <div className="sm-header">Protocol Summary</div>
+              <div className="sm-row"><span>MUSD borrowed</span><span style={{ color: '#f59e0b' }}>${musdDebt.toFixed(2)}</span></div>
+              <div className="sm-row"><span>Staking APY</span><span className="green">4.8%</span></div>
+              <div className="sm-row"><span>Borrow rate</span><span className="green">1% fixed</span></div>
             </div>
           </div>
         </div>
@@ -328,115 +356,337 @@ function Dashboard({ balance, staked }: { balance?: string; staked?: string }) {
   );
 }
 
-// ─── Staking Page ─────────────────────────────────────────────────────────────
+// ─── Borrow Page (MUSD) ───────────────────────────────────────────────────────
 
-function StakingPage({
-  staked, balance, isConnected,
-  stakeAmount, setStakeAmount, onStake,
-  withdrawAmount, setWithdrawAmount, onWithdraw,
-  sendTo, setSendTo, sendAmount, setSendAmount, onSend,
+function BorrowPage({
+  borrowPosition, musdBalance, isConnected,
+  borrowBtc, setBorrowBtc, borrowMusd, setBorrowMusd, onBorrow,
+  repayAmount, setRepayAmount, onRepay,
+  addCollateralAmt, setAddCollateralAmt, onAddCollateral,
+  onClosePosition, live,
 }: any) {
+  const btcPrice = live.ethUsd || 97500;
+
+  // Live position data from contract read
+  const btcCollateral  = borrowPosition?.[0] ? Number(formatEther(borrowPosition[0])) : 0;
+  const musdDebt       = borrowPosition?.[1] ? Number(formatEther(borrowPosition[1])) : 0;
+  const cr             = borrowPosition?.[2] ? Number(borrowPosition[2]) : 0;
+  const accruedInt     = borrowPosition?.[3] ? Number(formatEther(borrowPosition[3])) : 0;
+  const musdBal        = musdBalance         ? Number(formatEther(musdBalance as bigint)) : 0;
+  const hasPosition    = musdDebt > 0 || btcCollateral > 0;
+
+  // Auto-compute max MUSD for entered BTC
+  const btcNum       = parseFloat(borrowBtc) || 0;
+  const collateralUsd = btcNum * btcPrice;
+  const maxMusd      = (collateralUsd * 100 / 150).toFixed(2);  // at 150% CR
+  const safeMusd     = (collateralUsd * 100 / 200).toFixed(2);  // at 200% CR (safer)
+
+  const crColor = cr >= 200 ? 'var(--green)' : cr >= 150 ? '#f59e0b' : 'var(--red)';
+
   return (
     <div className="page-content fade-in">
-      <TopBar title="Staking Vault" />
+      <TopBar title="Borrow MUSD" blockNumber={live.blockNumber} gasPriceGwei={live.gasPriceGwei} />
       <div className="content-wrap">
 
-        <div className="metrics-row three-col">
-          <MetricCard label="Staked" value={`${parseFloat(staked || '0').toFixed(4)} ETH`} sub="Currently locked" change="APY 4.8%" changeDir="up" accent />
-          <MetricCard label="Rewards Earned" value="0.0723 ETH" sub="Since inception" change="+0.0041 this week" changeDir="up" />
-          <MetricCard label="Next Reward" value="~8h" sub="Est. 0.0041 ETH" />
+        {/* Explainer */}
+        <div style={{ background: 'linear-gradient(135deg, rgba(245,158,11,0.1), rgba(124,110,247,0.08))', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 14, padding: '20px 28px', marginBottom: 0 }}>
+          <div style={{ display: 'flex', gap: 40, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: '#f59e0b', marginBottom: 4 }}>₿ How it works</div>
+              <div style={{ fontSize: 13, color: 'var(--sub)', maxWidth: 420 }}>
+                Deposit BTC as collateral → mint MUSD at <strong style={{ color: 'var(--text)' }}>1% fixed APR</strong>. Deploy MUSD in DeFi for 4–8% yield. Keep your BTC exposure. Close your position any time — no lock-up.
+              </div>
+            </div>
+            <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+              {[
+                { val: '1%',    lbl: 'Fixed APR' },
+                { val: '150%',  lbl: 'Min CR'    },
+                { val: '0',     lbl: 'Lock-up'   },
+              ].map(s => (
+                <div key={s.lbl} style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: 22, fontWeight: 800, color: '#f59e0b' }}>{s.val}</div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: 1 }}>{s.lbl}</div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
+
+        {/* Active Position Summary */}
+        {hasPosition && (
+          <div className="metrics-row four-col">
+            <MetricCard label="BTC Collateral"    value={`${btcCollateral.toFixed(6)} BTC`} sub={`≈ $${(btcCollateral * btcPrice).toLocaleString(undefined, { maximumFractionDigits: 0 })}`} changeDir="up" />
+            <MetricCard label="MUSD Borrowed"     value={`$${musdDebt.toFixed(2)}`}          sub="outstanding debt"  changeDir="up" accent />
+            <MetricCard label="Collateral Ratio"  value={`${cr}%`}                           sub={cr >= 200 ? '✓ Healthy' : cr >= 150 ? '⚠ Watch' : '✗ Danger'} changeDir={cr >= 200 ? 'up' : 'down'} />
+            <MetricCard label="Accrued Interest"  value={`$${accruedInt.toFixed(4)}`}        sub="1% APR, unsettled"  changeDir="up" />
+          </div>
+        )}
+
+        {/* CR Health Bar */}
+        {hasPosition && (
+          <div className="card" style={{ padding: '16px 24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              <span style={{ fontSize: 13, fontWeight: 700 }}>Position Health — Collateral Ratio</span>
+              <span style={{ fontSize: 18, fontWeight: 800, color: crColor }}>{cr}%</span>
+            </div>
+            <div style={{ height: 8, background: 'rgba(255,255,255,0.07)', borderRadius: 4, overflow: 'hidden' }}>
+              <div style={{ height: '100%', width: `${Math.min(cr / 3, 100)}%`, background: crColor, borderRadius: 4, transition: 'width 0.5s' }} />
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 11, color: 'var(--muted)' }}>
+              <span>Liquidation 100%</span><span>Minimum 150%</span><span>Safe 200%+</span>
+            </div>
+          </div>
+        )}
 
         {/* Action Cards */}
         <div className="action-row">
-          {/* Stake */}
+          {/* Borrow */}
           <div className="action-card">
-            <div className="action-label accent">🔥 Stake Assets</div>
+            <div className="action-label accent">₿ Deposit & Borrow MUSD</div>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>BTC collateral (depositing now)</div>
             <div className="input-wrap">
-              <input className="dapp-input" type="number" placeholder="0.00" value={stakeAmount}
-                onChange={e => setStakeAmount(e.target.value)} />
-              <span className="input-unit">ETH</span>
+              <input className="dapp-input" type="number" placeholder="0.000000" value={borrowBtc}
+                onChange={e => setBorrowBtc(e.target.value)} />
+              <span className="input-unit">BTC</span>
             </div>
-            <div className="input-meta">
-              <span>Available: {parseFloat(balance || '0').toFixed(4)} ETH</span>
-              <button className="max-btn" onClick={() => setStakeAmount(balance || '0')}>MAX</button>
+            {btcNum > 0 && (
+              <div style={{ fontSize: 11, color: 'var(--muted)', margin: '6px 0 12px' }}>
+                ≈ ${collateralUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })} · Safe MUSD: ${safeMusd} · Max: ${maxMusd}
+              </div>
+            )}
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6 }}>MUSD to mint</div>
+            <div className="input-wrap">
+              <input className="dapp-input" type="number" placeholder="0.00" value={borrowMusd}
+                onChange={e => setBorrowMusd(e.target.value)} />
+              <span className="input-unit">MUSD</span>
             </div>
-            <div className="info-box">
-              <div className="ib-row"><span>Est. APY</span><span className="green">4.8%</span></div>
-              <div className="ib-row"><span>Annual reward</span><span>~0.072 ETH</span></div>
-              <div className="ib-row"><span>Lock period</span><span>None</span></div>
+            {btcNum > 0 && (
+              <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
+                <button onClick={() => setBorrowMusd(safeMusd)}
+                  style={{ flex: 1, padding: '6px', background: 'rgba(34,211,168,0.1)', border: '1px solid rgba(34,211,168,0.3)', borderRadius: 8, color: 'var(--green)', fontSize: 11, cursor: 'pointer' }}>
+                  Safe (200% CR)
+                </button>
+                <button onClick={() => setBorrowMusd(maxMusd)}
+                  style={{ flex: 1, padding: '6px', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 8, color: '#f59e0b', fontSize: 11, cursor: 'pointer' }}>
+                  Max (150% CR)
+                </button>
+              </div>
+            )}
+            <div className="info-box" style={{ marginTop: 10 }}>
+              <div className="ib-row"><span>Interest rate</span><span className="green">1% fixed APR</span></div>
+              <div className="ib-row"><span>Min collateral ratio</span><span>150%</span></div>
+              <div className="ib-row"><span>Lock-up period</span><span className="green">None</span></div>
             </div>
-            <button className="action-btn stake" disabled={!isConnected} onClick={onStake}>
-              🔥 Confirm Stake
+            <button className="action-btn stake" disabled={!isConnected} onClick={onBorrow}>
+              ₿ Borrow MUSD
             </button>
           </div>
 
-          {/* Withdraw */}
+          {/* Repay */}
           <div className="action-card">
-            <div className="action-label blue">↙ Withdraw</div>
+            <div className="action-label blue">✓ Repay MUSD</div>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>
+              Wallet MUSD: <span style={{ color: '#f59e0b' }}>${musdBal.toFixed(2)}</span>
+            </div>
             <div className="input-wrap">
-              <input className="dapp-input" type="number" placeholder="0.00" value={withdrawAmount}
-                onChange={e => setWithdrawAmount(e.target.value)} />
-              <span className="input-unit">ETH</span>
+              <input className="dapp-input" type="number" placeholder="0.00" value={repayAmount}
+                onChange={e => setRepayAmount(e.target.value)} />
+              <span className="input-unit">MUSD</span>
             </div>
             <div className="input-meta">
-              <span>Staked: {parseFloat(staked || '0').toFixed(4)} ETH</span>
-              <button className="max-btn blue" onClick={() => setWithdrawAmount(staked || '0')}>MAX</button>
+              <span>Outstanding: ${musdDebt.toFixed(2)}</span>
+              <button className="max-btn blue" onClick={() => setRepayAmount(musdDebt.toString())}>MAX</button>
             </div>
             <div className="info-box">
-              <div className="ib-row"><span>Unlock period</span><span className="amber">~24h</span></div>
-              <div className="ib-row"><span>Rewards forfeited</span><span className="green">None</span></div>
+              <div className="ib-row"><span>BTC released</span><span className="green">proportional</span></div>
               <div className="ib-row"><span>Slippage</span><span>0%</span></div>
+              <div className="ib-row"><span>Settlement</span><span>instant</span></div>
             </div>
-            <button className="action-btn withdraw" disabled={!isConnected} onClick={onWithdraw}>
-              ↙ Withdraw Assets
+            <button className="action-btn withdraw" disabled={!isConnected || musdDebt === 0} onClick={onRepay}>
+              ✓ Repay MUSD
             </button>
+            {hasPosition && (
+              <button
+                onClick={onClosePosition}
+                disabled={!isConnected}
+                style={{ width: '100%', marginTop: 8, padding: '10px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 10, color: 'var(--red)', cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>
+                ✗ Close Entire Position
+              </button>
+            )}
           </div>
 
-          {/* Send */}
+          {/* Add Collateral */}
           <div className="action-card">
-            <div className="action-label green">↗ Direct Transfer</div>
-            <input className="dapp-input" placeholder="Recipient 0x..." value={sendTo}
-              onChange={e => setSendTo(e.target.value)} style={{ marginBottom: 8 }} />
+            <div className="action-label green">+ Add Collateral</div>
+            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>
+              Improve your collateral ratio by adding more BTC
+            </div>
             <div className="input-wrap">
-              <input className="dapp-input" type="number" placeholder="0.00" value={sendAmount}
-                onChange={e => setSendAmount(e.target.value)} />
-              <span className="input-unit">ETH</span>
+              <input className="dapp-input" type="number" placeholder="0.000000" value={addCollateralAmt}
+                onChange={e => setAddCollateralAmt(e.target.value)} />
+              <span className="input-unit">BTC</span>
             </div>
-            <div className="input-meta">
-              <span>Gas est: ~0.00042 ETH</span>
-              <span className="muted">≈ $1.48</span>
+            <div className="info-box" style={{ marginTop: 10 }}>
+              <div className="ib-row"><span>Current CR</span><span style={{ color: crColor }}>{hasPosition ? `${cr}%` : 'N/A'}</span></div>
+              <div className="ib-row"><span>Contract</span>
+                <a href={`https://explorer.test.mezo.org/address/${BORROW_ADDRESS}`} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)', fontSize: 11 }}>
+                  View ↗
+                </a>
+              </div>
+              <div className="ib-row"><span>MUSD token</span>
+                <a href={`https://explorer.test.mezo.org/address/${MUSD_ADDRESS}`} target="_blank" rel="noreferrer" style={{ color: '#f59e0b', fontSize: 11 }}>
+                  View ↗
+                </a>
+              </div>
             </div>
-            <div className="info-box">
-              <div className="ib-row"><span>Network</span><span>Sepolia</span></div>
-              <div className="ib-row"><span>Confirmations</span><span>1 block</span></div>
-              <div className="ib-row"><span>Speed</span><span className="amber">Standard</span></div>
-            </div>
-            <button className="action-btn send" disabled={!isConnected} onClick={onSend}>
-              ↗ Send ETH
+            <button className="action-btn send" disabled={!isConnected || !hasPosition} onClick={onAddCollateral}>
+              + Add BTC Collateral
             </button>
           </div>
         </div>
 
-        {/* Rewards Chart */}
+      </div>
+    </div>
+  );
+}
+
+// ─── Vault Page ───────────────────────────────────────────────────────────────
+
+function VaultPage({ vaultBalance, tvl, isConnected, depositAmount, setDepositAmount, onDeposit, vaultWithdrawAmount, setVaultWithdrawAmount, onVaultWithdraw, live }: any) {
+  const btcPrice = live.ethUsd || 97500;
+  const tvlBtc   = Number(tvl ?? 0n) / 1e18;
+  const tvlUsd   = (tvlBtc * btcPrice).toLocaleString();
+  const userBtc  = parseFloat(vaultBalance || '0');
+
+  return (
+    <div className="page-content fade-in">
+      <TopBar title="BTC Vault" blockNumber={live.blockNumber} gasPriceGwei={live.gasPriceGwei} />
+      <div className="content-wrap">
+        <div className="metrics-row three-col">
+          <MetricCard label="Your Vault Balance" value={`${userBtc.toFixed(6)} BTC`} sub="Currently deposited" change="Earning yield" changeDir="up" accent />
+          <MetricCard label="Vault TVL"           value={`${tvlBtc.toFixed(4)} BTC`} sub={`≈ $${tvlUsd}`}      change="On-chain"     changeDir="up" />
+          <MetricCard label="Vault Address"       value={`${VAULT_ADDRESS.slice(0,8)}...${VAULT_ADDRESS.slice(-6)}`} sub="MezoVault.sol" />
+        </div>
+        <div className="action-row">
+          <div className="action-card">
+            <div className="action-label accent">⬇ Deposit BTC</div>
+            <div className="input-wrap">
+              <input className="dapp-input" type="number" placeholder="0.000000" value={depositAmount} onChange={e => setDepositAmount(e.target.value)} />
+              <span className="input-unit">BTC</span>
+            </div>
+            <div className="info-box">
+              <div className="ib-row"><span>Contract</span><span>MezoVault</span></div>
+              <div className="ib-row"><span>Function</span><span className="green">deposit()</span></div>
+            </div>
+            <button className="action-btn stake" disabled={!isConnected} onClick={onDeposit}>⬇ Confirm Deposit</button>
+          </div>
+          <div className="action-card">
+            <div className="action-label blue">↙ Withdraw BTC</div>
+            <div className="input-wrap">
+              <input className="dapp-input" type="number" placeholder="0.000000" value={vaultWithdrawAmount} onChange={e => setVaultWithdrawAmount(e.target.value)} />
+              <span className="input-unit">BTC</span>
+            </div>
+            <div className="input-meta">
+              <span>In vault: {userBtc.toFixed(6)} BTC</span>
+              <button className="max-btn blue" onClick={() => setVaultWithdrawAmount(vaultBalance || '0')}>MAX</button>
+            </div>
+            <div className="info-box">
+              <div className="ib-row"><span>Function</span><span className="blue">withdraw(uint256)</span></div>
+              <div className="ib-row"><span>Fee</span><span className="green">None</span></div>
+            </div>
+            <button className="action-btn withdraw" disabled={!isConnected} onClick={onVaultWithdraw}>↙ Withdraw from Vault</button>
+          </div>
+          <div className="action-card">
+            <div className="action-label green">ℹ Vault Info</div>
+            <div className="info-box" style={{ marginTop: 8 }}>
+              <div className="ib-row"><span>Explorer</span><a href={`https://explorer.test.mezo.org/address/${VAULT_ADDRESS}`} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)', fontSize: 11 }}>View ↗</a></div>
+              <div className="ib-row"><span>Total BTC</span><span>{tvlBtc.toFixed(6)}</span></div>
+              <div className="ib-row"><span>USD Value</span><span className="green">${tvlUsd}</span></div>
+              <div className="ib-row"><span>Chain</span><span>Mezo (31611)</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Staking Page ─────────────────────────────────────────────────────────────
+
+function StakingPage({ staked, balance, isConnected, stakeAmount, setStakeAmount, onStake, withdrawAmount, setWithdrawAmount, onWithdraw, sendTo, setSendTo, sendAmount, setSendAmount, onSend, live }: any) {
+  return (
+    <div className="page-content fade-in">
+      <TopBar title="Staking Vault" blockNumber={live.blockNumber} gasPriceGwei={live.gasPriceGwei} />
+      <div className="content-wrap">
+        <div className="metrics-row three-col">
+          <MetricCard label="Staked"         value={`${parseFloat(staked || '0').toFixed(6)} BTC`} sub="Currently locked" change="APY 4.8%"            changeDir="up" accent />
+          <MetricCard label="Rewards Earned" value="0.00072 BTC"                                   sub="Since inception"  change="+0.000041 this week" changeDir="up" />
+          <MetricCard label="Next Reward"    value="~8h"                                           sub="Est. 0.000041 BTC" />
+        </div>
+        <div className="action-row">
+          <div className="action-card">
+            <div className="action-label accent">🔥 Stake BTC</div>
+            <div className="input-wrap">
+              <input className="dapp-input" type="number" placeholder="0.000000" value={stakeAmount} onChange={e => setStakeAmount(e.target.value)} />
+              <span className="input-unit">BTC</span>
+            </div>
+            <div className="input-meta">
+              <span>Available: {parseFloat(balance || '0').toFixed(6)} BTC</span>
+              <button className="max-btn" onClick={() => setStakeAmount(balance || '0')}>MAX</button>
+            </div>
+            <div className="info-box">
+              <div className="ib-row"><span>APY</span><span className="green">4.8%</span></div>
+              <div className="ib-row"><span>Lock-up</span><span>None</span></div>
+            </div>
+            <button className="action-btn stake" disabled={!isConnected} onClick={onStake}>🔥 Confirm Stake</button>
+          </div>
+          <div className="action-card">
+            <div className="action-label blue">↙ Unstake BTC</div>
+            <div className="input-wrap">
+              <input className="dapp-input" type="number" placeholder="0.000000" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} />
+              <span className="input-unit">BTC</span>
+            </div>
+            <div className="input-meta">
+              <span>Staked: {parseFloat(staked || '0').toFixed(6)} BTC</span>
+              <button className="max-btn blue" onClick={() => setWithdrawAmount(staked || '0')}>MAX</button>
+            </div>
+            <div className="info-box">
+              <div className="ib-row"><span>Unlock</span><span className="amber">~24h</span></div>
+              <div className="ib-row"><span>Slippage</span><span>0%</span></div>
+            </div>
+            <button className="action-btn withdraw" disabled={!isConnected} onClick={onWithdraw}>↙ Unstake BTC</button>
+          </div>
+          <div className="action-card">
+            <div className="action-label green">↗ Direct Transfer</div>
+            <input className="dapp-input" placeholder="Recipient 0x..." value={sendTo} onChange={e => setSendTo(e.target.value)} style={{ marginBottom: 8 }} />
+            <div className="input-wrap">
+              <input className="dapp-input" type="number" placeholder="0.000000" value={sendAmount} onChange={e => setSendAmount(e.target.value)} />
+              <span className="input-unit">BTC</span>
+            </div>
+            <div className="info-box">
+              <div className="ib-row"><span>Network</span><span>Mezo Testnet</span></div>
+              <div className="ib-row"><span>Speed</span><span className="amber">Standard</span></div>
+            </div>
+            <button className="action-btn send" disabled={!isConnected} onClick={onSend}>↗ Send BTC</button>
+          </div>
+        </div>
         <div className="card">
           <div className="card-header">
             <span className="card-title">Staking Rewards — Last 30 Days</span>
-            <span className="card-meta">Total: 0.0723 ETH earned</span>
+            <span className="card-meta">Total: 0.00072 BTC earned</span>
           </div>
           <div className="chart-wrap">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={rewardsData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                 <XAxis dataKey="week" stroke="#4b5563" tick={{ fill: '#6b7280', fontSize: 11 }} />
-                <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} tickFormatter={(v: number) => `${v.toFixed(3)}Ξ`} />
+                <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} tickFormatter={(v: number) => `${v.toFixed(5)}₿`} />
                 <Tooltip content={<ChartTooltip />} />
                 <Bar dataKey="amount" fill="#7c6ef7" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </div>
-
       </div>
     </div>
   );
@@ -445,27 +695,23 @@ function StakingPage({
 // ─── History Page ─────────────────────────────────────────────────────────────
 
 function HistoryPage({ history }: { history: TransactionRecord[] }) {
-  const [filter, setFilter] = useState<'All' | 'Stake' | 'Withdraw' | 'Send'>('All');
+  const [filter, setFilter] = useState<'All' | 'Stake' | 'Withdraw' | 'Send' | 'Deposit' | 'Borrow' | 'Repay'>('All');
   const filtered = filter === 'All' ? history : history.filter(tx => tx.type === filter);
-  const totalStaked = history.filter(t => t.type === 'Stake').reduce((a, t) => a + parseFloat(t.amount), 0);
-  const totalSent   = history.filter(t => t.type === 'Send').reduce((a, t) => a + parseFloat(t.amount), 0);
 
   return (
     <div className="page-content fade-in">
       <TopBar title="Transaction History" />
       <div className="content-wrap">
-
         <div className="metrics-row three-col">
           <MetricCard label="Total Transactions" value={history.length.toString()} sub="All time" />
-          <MetricCard label="Volume Staked"      value={`${totalStaked.toFixed(4)} ETH`} sub="Cumulative" />
-          <MetricCard label="Volume Sent"        value={`${totalSent.toFixed(4)} ETH`}   sub="Cumulative" />
+          <MetricCard label="MUSD Borrowed"       value={`$${history.filter(t => t.type === 'Borrow').reduce((a, t) => a + parseFloat(t.amount), 0).toFixed(2)}`} sub="Cumulative" />
+          <MetricCard label="Volume Staked"       value={`${history.filter(t => t.type === 'Stake').reduce((a, t) => a + parseFloat(t.amount), 0).toFixed(6)} BTC`} sub="Cumulative" />
         </div>
-
         <div className="card">
           <div className="card-header">
             <span className="card-title">All Activity</span>
             <div className="tab-row">
-              {(['All', 'Stake', 'Withdraw', 'Send'] as const).map(f => (
+              {(['All','Borrow','Repay','Stake','Withdraw','Send','Deposit'] as const).map(f => (
                 <button key={f} className={`tab${filter === f ? ' active' : ''}`} onClick={() => setFilter(f)}>{f}</button>
               ))}
             </div>
@@ -477,26 +723,25 @@ function HistoryPage({ history }: { history: TransactionRecord[] }) {
               const meta = TX_META[tx.type];
               return (
                 <div key={tx.id} className="tx-row">
-                  <div className="tx-icon" style={{ color: meta.color, borderColor: meta.color + '30', background: meta.color + '15' }}>
-                    {meta.icon}
-                  </div>
+                  <div className="tx-icon" style={{ color: meta.color, borderColor: meta.color + '30', background: meta.color + '15' }}>{meta.icon}</div>
                   <div className="tx-info">
                     <div className="tx-type">{tx.type}</div>
                     <div className="tx-hash">
-                      <a href={`https://sepolia.etherscan.io/tx/${tx.hash}`} target="_blank" rel="noreferrer">
-                        {tx.hash.slice(0, 12)}...
+                      <a href={`https://explorer.test.mezo.org/tx/${tx.hash}`} target="_blank" rel="noreferrer">
+                        {tx.hash.slice(0, 14)}...
                       </a>
                       · {timeAgo(tx.timestamp)}
                     </div>
                   </div>
-                  <div className="tx-amount" style={{ color: meta.color }}>{tx.amount} ETH</div>
+                  <div className="tx-amount" style={{ color: meta.color }}>
+                    {tx.type === 'Borrow' || tx.type === 'Repay' ? `$${tx.amount} MUSD` : `${tx.amount} BTC`}
+                  </div>
                   <div className={`tx-status ${tx.status.toLowerCase()}`}>{tx.status}</div>
                 </div>
               );
             })
           )}
         </div>
-
       </div>
     </div>
   );
@@ -504,30 +749,26 @@ function HistoryPage({ history }: { history: TransactionRecord[] }) {
 
 // ─── Analysis Page ────────────────────────────────────────────────────────────
 
-function AnalysisPage({ balance, staked }: { balance?: string; staked?: string }) {
-  const tvl = ((parseFloat(balance || '0') + parseFloat(staked || '0')) * 3512).toFixed(0);
-  const stakingRatio = staked && balance
-    ? ((parseFloat(staked) / (parseFloat(staked) + parseFloat(balance))) * 100).toFixed(1)
-    : '52.7';
+function AnalysisPage({ balance, staked, vaultBalance, live }: any) {
+  const btcPrice = live.ethUsd || 97500;
+  const tvlBtc   = Number(live.tvlWei ?? 0n) / 1e18;
+  const tvlUsd   = (tvlBtc * btcPrice).toFixed(0);
+  const totalBtc = parseFloat(staked || '0') + parseFloat(balance || '0') + parseFloat(vaultBalance || '0');
+  const stakingRatio = totalBtc > 0 ? ((parseFloat(staked || '0') / totalBtc) * 100).toFixed(1) : '52.7';
 
   return (
     <div className="page-content fade-in">
-      <TopBar title="Portfolio Analysis" />
+      <TopBar title="Portfolio Analysis" blockNumber={live.blockNumber} gasPriceGwei={live.gasPriceGwei} />
       <div className="content-wrap">
-
-        {/* Charts */}
         <div className="grid-1-1">
           <div className="card">
-            <div className="card-header">
-              <span className="card-title">Volume Analysis</span>
-              <span className="card-meta">Last 7 days</span>
-            </div>
+            <div className="card-header"><span className="card-title">Volume Analysis</span><span className="card-meta">Last 7 days</span></div>
             <div className="chart-wrap">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={volumeData}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                   <XAxis dataKey="day" stroke="#4b5563" tick={{ fill: '#6b7280', fontSize: 11 }} />
-                  <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} tickFormatter={(v: number) => `${v}Ξ`} />
+                  <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} tickFormatter={(v: number) => `${v}₿`} />
                   <Tooltip content={<ChartTooltip />} />
                   <Bar dataKey="vol" fill="#22d3a8" radius={[4, 4, 0, 0]} />
                 </BarChart>
@@ -535,10 +776,7 @@ function AnalysisPage({ balance, staked }: { balance?: string; staked?: string }
             </div>
           </div>
           <div className="card">
-            <div className="card-header">
-              <span className="card-title">Yield Projection</span>
-              <span className="card-meta">12 months @ 4.8% APY</span>
-            </div>
+            <div className="card-header"><span className="card-title">Yield Projection</span><span className="card-meta">12 months @ 4.8% APY</span></div>
             <div className="chart-wrap">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={yieldData}>
@@ -550,7 +788,7 @@ function AnalysisPage({ balance, staked }: { balance?: string; staked?: string }
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                   <XAxis dataKey="month" stroke="#4b5563" tick={{ fill: '#6b7280', fontSize: 11 }} />
-                  <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} tickFormatter={(v: number) => `${v.toFixed(2)}Ξ`} domain={['auto','auto']} />
+                  <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} tickFormatter={(v: number) => `${v.toFixed(5)}₿`} domain={['auto','auto']} />
                   <Tooltip content={<ChartTooltip />} />
                   <Area type="monotone" dataKey="yield" stroke="#f59e0b" strokeWidth={2} fill="url(#yieldGrad)" dot={false} />
                 </AreaChart>
@@ -558,57 +796,44 @@ function AnalysisPage({ balance, staked }: { balance?: string; staked?: string }
             </div>
           </div>
         </div>
-
-        {/* Metrics + Holdings */}
         <div className="grid-2-1">
           <div className="card">
             <div className="card-header"><span className="card-title">On-Chain Metrics</span></div>
             <div className="metrics-row two-col" style={{ marginBottom: 20 }}>
-              <div className="info-block"><div className="ib-label">Total Value Locked</div><div className="ib-val accent">${Number(tvl).toLocaleString()}</div></div>
+              <div className="info-block"><div className="ib-label">Vault TVL</div><div className="ib-val accent">${Number(tvlUsd).toLocaleString()}</div></div>
               <div className="info-block"><div className="ib-label">Staking Ratio</div><div className="ib-val green">{stakingRatio}%</div></div>
-              <div className="info-block"><div className="ib-label">Avg Gas Used</div><div className="ib-val">12.4 gwei</div></div>
-              <div className="info-block"><div className="ib-label">Contract Calls</div><div className="ib-val">47</div></div>
+              <div className="info-block"><div className="ib-label">Gas Price</div><div className="ib-val">{live.gasPriceGwei || 3} gwei</div></div>
+              <div className="info-block"><div className="ib-label">Block</div><div className="ib-val">{live.blockNumber?.toLocaleString() ?? '...'}</div></div>
             </div>
             <div className="progress-section">
-              <div className="progress-row">
-                <span>Staking utilization</span><span>{stakingRatio}%</span>
-              </div>
+              <div className="progress-row"><span>Staking utilization</span><span>{stakingRatio}%</span></div>
               <div className="progress-bar"><div className="progress-fill" style={{ width: `${stakingRatio}%` }} /></div>
-              <div className="progress-row" style={{ marginTop: 12 }}>
-                <span>Reward efficiency</span><span>97.2%</span>
-              </div>
+              <div className="progress-row" style={{ marginTop: 12 }}><span>Reward efficiency</span><span>97.2%</span></div>
               <div className="progress-bar"><div className="progress-fill green" style={{ width: '97.2%' }} /></div>
-              <div className="progress-row" style={{ marginTop: 12 }}>
-                <span>Network uptime</span><span>99.9%</span>
-              </div>
+              <div className="progress-row" style={{ marginTop: 12 }}><span>Network uptime</span><span>99.9%</span></div>
               <div className="progress-bar"><div className="progress-fill blue" style={{ width: '99.9%' }} /></div>
             </div>
           </div>
-
           <div className="card">
             <div className="card-header"><span className="card-title">Holdings</span></div>
             {[
-              { sym: 'stE', label: 'Staked ETH',  net: 'Ethereum · Sepolia', amt: parseFloat(staked || '1.5').toFixed(4), usd: (parseFloat(staked || '1.5') * 3512).toFixed(2), color: '#7c6ef7' },
-              { sym: 'ETH', label: 'Ethereum',     net: 'Ethereum · Sepolia', amt: parseFloat(balance || '2.844').toFixed(4), usd: (parseFloat(balance || '2.844') * 3512).toFixed(2), color: '#38bdf8' },
-              { sym: 'RWD', label: 'Rewards',      net: 'Staking · Earned',   amt: '0.0723', usd: (0.0723 * 3512).toFixed(2), color: '#22d3a8' },
+              { sym: 'stB', label: 'Staked BTC', net: 'MezoStaking', amt: parseFloat(staked  || '0.015').toFixed(6), usd: (parseFloat(staked  || '0.015') * btcPrice).toFixed(2), color: '#7c6ef7' },
+              { sym: 'VLT', label: 'Vault BTC',  net: 'MezoVault',   amt: parseFloat(vaultBalance || '0.010').toFixed(6), usd: (parseFloat(vaultBalance || '0.010') * btcPrice).toFixed(2), color: '#38bdf8' },
+              { sym: 'BTC', label: 'Liquid BTC', net: 'Mezo Testnet',amt: parseFloat(balance || '0.028').toFixed(6), usd: (parseFloat(balance || '0.028') * btcPrice).toFixed(2), color: '#22d3a8' },
             ].map(h => (
               <div key={h.sym} className="holding-row">
                 <div className="holding-left">
                   <div className="holding-icon" style={{ background: h.color + '20', color: h.color }}>{h.sym}</div>
-                  <div>
-                    <div className="holding-name">{h.label}</div>
-                    <div className="holding-net">{h.net}</div>
-                  </div>
+                  <div><div className="holding-name">{h.label}</div><div className="holding-net">{h.net}</div></div>
                 </div>
                 <div>
-                  <div className="holding-amt">{h.amt} ETH</div>
+                  <div className="holding-amt">{h.amt} BTC</div>
                   <div className="holding-usd">${Number(h.usd).toLocaleString()}</div>
                 </div>
               </div>
             ))}
           </div>
         </div>
-
       </div>
     </div>
   );
@@ -618,108 +843,108 @@ function AnalysisPage({ balance, staked }: { balance?: string; staked?: string }
 
 function AppContent() {
   const { address, isConnected } = useAccount();
-  const { disconnect } = useDisconnect();
-  const { connect, connectors } = useConnect();
-  const { data: walletBalance } = useBalance({ address });
+  const { disconnect }           = useDisconnect();
+  const { connect, connectors }  = useConnect();
+  const { data: walletBalance }  = useBalance({ address });
 
-  const [stakeAmount,    setStakeAmount]    = useState('');
-  const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [sendTo,         setSendTo]         = useState('');
-  const [sendAmount,     setSendAmount]     = useState('');
-  const [history,        setHistory]        = useState<TransactionRecord[]>(MOCK_HISTORY);
+  const live = useLiveChainData(address);
 
-  // Contract reads
-  const { data: stakedBalance } = useReadContract({
-    address: STAKING_ADDRESS,
-    abi: STAKING_ABI,
-    functionName: 'getStakedBalance',
-    args: address ? [address] : undefined,
-    query: { enabled: !!address },
-  });
+  const [stakeAmount,         setStakeAmount]         = useState('');
+  const [withdrawAmount,      setWithdrawAmount]       = useState('');
+  const [depositAmount,       setDepositAmount]        = useState('');
+  const [vaultWithdrawAmount, setVaultWithdrawAmount]  = useState('');
+  const [borrowBtc,           setBorrowBtc]            = useState('');
+  const [borrowMusd,          setBorrowMusd]           = useState('');
+  const [repayAmount,         setRepayAmount]          = useState('');
+  const [addCollateralAmt,    setAddCollateralAmt]     = useState('');
+  const [sendTo,              setSendTo]               = useState('');
+  const [sendAmount,          setSendAmount]           = useState('');
+  const [history,             setHistory]              = useState<TransactionRecord[]>(MOCK_HISTORY);
 
-  // Contract writes
-  const { writeContract: writeStaking, data: stakeHash }   = useWriteContract();
-  const { data: sendHash, sendTransaction }                  = useSendTransaction();
-  const { writeContract: writeWithdraw,  data: withdrawHash } = useWriteContract();
+  // ── Contract reads ────────────────────────────────────────────────────────
+  const { data: stakedBalance }    = useReadContract({ address: STAKING_ADDRESS, abi: STAKING_ABI, functionName: 'getStakedBalance', args: address ? [address] : undefined, query: { enabled: !!address, refetchInterval: 12_000 } });
+  const { data: vaultUserBalance } = useReadContract({ address: VAULT_ADDRESS,   abi: VAULT_ABI,   functionName: 'balanceOf',        args: address ? [address] : undefined, query: { enabled: !!address, refetchInterval: 12_000 } });
+  const { data: musdBalance }      = useReadContract({ address: MUSD_ADDRESS,    abi: MUSD_ABI,    functionName: 'balanceOf',        args: address ? [address] : undefined, query: { enabled: !!address, refetchInterval: 12_000 } });
+  const { data: borrowPosition }   = useReadContract({ address: BORROW_ADDRESS,  abi: BORROW_ABI,  functionName: 'getPosition',      args: address ? [address] : undefined, query: { enabled: !!address, refetchInterval: 12_000 } });
 
-  // Wait for confirmations
-  const { isSuccess: isSendSuccess }     = useWaitForTransactionReceipt({ hash: sendHash });
-  const { isSuccess: isStakeSuccess }    = useWaitForTransactionReceipt({ hash: stakeHash });
-  const { isSuccess: isWithdrawSuccess } = useWaitForTransactionReceipt({ hash: withdrawHash });
+  // ── Contract writes ───────────────────────────────────────────────────────
+  const { writeContract: writeStaking,   data: stakeHash    } = useWriteContract();
+  const { writeContract: writeUnstake,   data: unstakeHash  } = useWriteContract();
+  const { writeContract: writeDeposit,   data: depositHash  } = useWriteContract();
+  const { writeContract: writeVaultW,    data: vaultWHash   } = useWriteContract();
+  const { writeContract: writeBorrow,    data: borrowHash   } = useWriteContract();
+  const { writeContract: writeRepay,     data: repayHash    } = useWriteContract();
+  const { writeContract: writeAddColl,   data: addCollHash  } = useWriteContract();
+  const { writeContract: writeClose,     data: closeHash    } = useWriteContract();
+  const { data: sendHash, sendTransaction }                    = useSendTransaction();
+
+  // ── Wait for receipts ─────────────────────────────────────────────────────
+  const { isSuccess: isSendSuccess }    = useWaitForTransactionReceipt({ hash: sendHash    });
+  const { isSuccess: isStakeSuccess }   = useWaitForTransactionReceipt({ hash: stakeHash   });
+  const { isSuccess: isUnstakeSuccess } = useWaitForTransactionReceipt({ hash: unstakeHash });
+  const { isSuccess: isDepositSuccess } = useWaitForTransactionReceipt({ hash: depositHash });
+  const { isSuccess: isVaultWSuccess }  = useWaitForTransactionReceipt({ hash: vaultWHash  });
+  const { isSuccess: isBorrowSuccess }  = useWaitForTransactionReceipt({ hash: borrowHash  });
+  const { isSuccess: isRepaySuccess }   = useWaitForTransactionReceipt({ hash: repayHash   });
 
   useEffect(() => {
-    if (isSendSuccess && sendHash) {
-      setHistory(prev => [{
-        id: sendHash, type: 'Send', amount: sendAmount,
-        status: 'Success', hash: sendHash, timestamp: Date.now(),
-      }, ...prev]);
-      setSendAmount(''); setSendTo('');
-    }
+    if (isSendSuccess    && sendHash)    { setHistory(p => [{ id: sendHash,    type: 'Send',    amount: sendAmount,       status: 'Success', hash: sendHash,    timestamp: Date.now() }, ...p]); setSendAmount(''); setSendTo(''); }
   }, [isSendSuccess, sendHash]);
-
   useEffect(() => {
-    if (isStakeSuccess && stakeHash) {
-      setHistory(prev => [{
-        id: stakeHash, type: 'Stake', amount: stakeAmount,
-        status: 'Success', hash: stakeHash, timestamp: Date.now(),
-      }, ...prev]);
-      setStakeAmount('');
-    }
+    if (isStakeSuccess   && stakeHash)   { setHistory(p => [{ id: stakeHash,   type: 'Stake',   amount: stakeAmount,      status: 'Success', hash: stakeHash,   timestamp: Date.now() }, ...p]); setStakeAmount(''); }
   }, [isStakeSuccess, stakeHash]);
-
   useEffect(() => {
-    if (isWithdrawSuccess && withdrawHash) {
-      setHistory(prev => [{
-        id: withdrawHash, type: 'Withdraw', amount: withdrawAmount,
-        status: 'Success', hash: withdrawHash, timestamp: Date.now(),
-      }, ...prev]);
-      setWithdrawAmount('');
-    }
-  }, [isWithdrawSuccess, withdrawHash]);
+    if (isUnstakeSuccess && unstakeHash) { setHistory(p => [{ id: unstakeHash, type: 'Withdraw',amount: withdrawAmount,    status: 'Success', hash: unstakeHash, timestamp: Date.now() }, ...p]); setWithdrawAmount(''); }
+  }, [isUnstakeSuccess, unstakeHash]);
+  useEffect(() => {
+    if (isDepositSuccess && depositHash) { setHistory(p => [{ id: depositHash, type: 'Deposit', amount: depositAmount,     status: 'Success', hash: depositHash, timestamp: Date.now() }, ...p]); setDepositAmount(''); }
+  }, [isDepositSuccess, depositHash]);
+  useEffect(() => {
+    if (isVaultWSuccess  && vaultWHash)  { setHistory(p => [{ id: vaultWHash,  type: 'Withdraw',amount: vaultWithdrawAmount,status: 'Success', hash: vaultWHash,  timestamp: Date.now() }, ...p]); setVaultWithdrawAmount(''); }
+  }, [isVaultWSuccess, vaultWHash]);
+  useEffect(() => {
+    if (isBorrowSuccess  && borrowHash)  { setHistory(p => [{ id: borrowHash,  type: 'Borrow',  amount: borrowMusd,        status: 'Success', hash: borrowHash,  timestamp: Date.now() }, ...p]); setBorrowBtc(''); setBorrowMusd(''); }
+  }, [isBorrowSuccess, borrowHash]);
+  useEffect(() => {
+    if (isRepaySuccess   && repayHash)   { setHistory(p => [{ id: repayHash,   type: 'Repay',   amount: repayAmount,        status: 'Success', hash: repayHash,   timestamp: Date.now() }, ...p]); setRepayAmount(''); }
+  }, [isRepaySuccess, repayHash]);
 
-  const handleStake = useCallback(() => {
-    if (!stakeAmount) return;
-    writeStaking({ address: STAKING_ADDRESS, abi: STAKING_ABI, functionName: 'stake', value: parseEther(stakeAmount) });
-  }, [stakeAmount, writeStaking]);
+  // ── Handlers ─────────────────────────────────────────────────────────────
+  const handleStake         = useCallback(() => { if (!stakeAmount)        return; writeStaking ({ address: STAKING_ADDRESS, abi: STAKING_ABI, functionName: 'stake',         value: parseEther(stakeAmount) }); }, [stakeAmount, writeStaking]);
+  const handleUnstake       = useCallback(() => { if (!withdrawAmount)     return; writeUnstake ({ address: STAKING_ADDRESS, abi: STAKING_ABI, functionName: 'withdraw',      args: [parseEther(withdrawAmount)] }); }, [withdrawAmount, writeUnstake]);
+  const handleDeposit       = useCallback(() => { if (!depositAmount)      return; writeDeposit ({ address: VAULT_ADDRESS,   abi: VAULT_ABI,   functionName: 'deposit',       value: parseEther(depositAmount) }); }, [depositAmount, writeDeposit]);
+  const handleVaultWithdraw = useCallback(() => { if (!vaultWithdrawAmount)return; writeVaultW  ({ address: VAULT_ADDRESS,   abi: VAULT_ABI,   functionName: 'withdraw',      args: [parseEther(vaultWithdrawAmount)] }); }, [vaultWithdrawAmount, writeVaultW]);
+  const handleBorrow        = useCallback(() => { if (!borrowBtc || !borrowMusd) return; writeBorrow({ address: BORROW_ADDRESS, abi: BORROW_ABI, functionName: 'borrow', value: parseEther(borrowBtc), args: [parseEther(borrowMusd)] }); }, [borrowBtc, borrowMusd, writeBorrow]);
+  const handleRepay         = useCallback(() => { if (!repayAmount)        return; writeRepay   ({ address: BORROW_ADDRESS,  abi: BORROW_ABI,  functionName: 'repay',         args: [parseEther(repayAmount)] }); }, [repayAmount, writeRepay]);
+  const handleAddCollateral = useCallback(() => { if (!addCollateralAmt)   return; writeAddColl ({ address: BORROW_ADDRESS,  abi: BORROW_ABI,  functionName: 'addCollateral', value: parseEther(addCollateralAmt) }); }, [addCollateralAmt, writeAddColl]);
+  const handleClosePosition = useCallback(() => { writeClose({ address: BORROW_ADDRESS, abi: BORROW_ABI, functionName: 'closePosition' }); }, [writeClose]);
+  const handleSend          = useCallback(() => { if (!sendAmount || !sendTo) return; sendTransaction({ to: sendTo as `0x${string}`, value: parseEther(sendAmount) }); }, [sendAmount, sendTo, sendTransaction]);
 
-  const handleWithdraw = useCallback(() => {
-    if (!withdrawAmount) return;
-    writeWithdraw({ address: STAKING_ADDRESS, abi: STAKING_ABI, functionName: 'withdraw', args: [parseEther(withdrawAmount)] });
-  }, [withdrawAmount, writeWithdraw]);
-
-  const handleSend = useCallback(() => {
-    if (!sendAmount || !sendTo) return;
-    sendTransaction({ to: sendTo as `0x${string}`, value: parseEther(sendAmount) });
-  }, [sendAmount, sendTo, sendTransaction]);
-
-  const stakedFormatted = stakedBalance ? formatEther(stakedBalance as bigint) : '1.5000';
+  const stakedFormatted       = stakedBalance      ? formatEther(stakedBalance      as bigint) : '0';
+  const vaultBalanceFormatted = vaultUserBalance   ? formatEther(vaultUserBalance   as bigint) : '0';
 
   return (
     <div className="app-layout">
-      <Sidebar
-        address={address}
-        isConnected={isConnected}
-        balance={walletBalance}
-        connectors={connectors}
-        onConnect={connect}
-        onDisconnect={disconnect}
-      />
+      <Sidebar address={address} isConnected={isConnected} balance={walletBalance} musdBalance={musdBalance} connectors={connectors} onConnect={connect} onDisconnect={disconnect} />
       <main className="app-main">
         <Routes>
-          <Route path="/"         element={<Dashboard balance={walletBalance?.formatted} staked={stakedFormatted} />} />
-          <Route path="/staking"  element={
-            <StakingPage
-              staked={stakedFormatted}
-              balance={walletBalance?.formatted}
+          <Route path="/" element={<Dashboard balance={walletBalance?.formatted} staked={stakedFormatted} vaultBalance={vaultBalanceFormatted} musdBalance={musdBalance} borrowPosition={borrowPosition as any} live={live} />} />
+          <Route path="/borrow" element={
+            <BorrowPage
+              borrowPosition={borrowPosition as any} musdBalance={musdBalance}
               isConnected={isConnected}
-              stakeAmount={stakeAmount}    setStakeAmount={setStakeAmount}    onStake={handleStake}
-              withdrawAmount={withdrawAmount} setWithdrawAmount={setWithdrawAmount} onWithdraw={handleWithdraw}
-              sendTo={sendTo} setSendTo={setSendTo}
-              sendAmount={sendAmount} setSendAmount={setSendAmount} onSend={handleSend}
+              borrowBtc={borrowBtc}       setBorrowBtc={setBorrowBtc}
+              borrowMusd={borrowMusd}     setBorrowMusd={setBorrowMusd}     onBorrow={handleBorrow}
+              repayAmount={repayAmount}   setRepayAmount={setRepayAmount}   onRepay={handleRepay}
+              addCollateralAmt={addCollateralAmt} setAddCollateralAmt={setAddCollateralAmt} onAddCollateral={handleAddCollateral}
+              onClosePosition={handleClosePosition}
+              live={live}
             />
           } />
+          <Route path="/vault" element={<VaultPage vaultBalance={vaultBalanceFormatted} tvl={live.tvlWei} isConnected={isConnected} depositAmount={depositAmount} setDepositAmount={setDepositAmount} onDeposit={handleDeposit} vaultWithdrawAmount={vaultWithdrawAmount} setVaultWithdrawAmount={setVaultWithdrawAmount} onVaultWithdraw={handleVaultWithdraw} live={live} />} />
+          <Route path="/staking" element={<StakingPage staked={stakedFormatted} balance={walletBalance?.formatted} isConnected={isConnected} stakeAmount={stakeAmount} setStakeAmount={setStakeAmount} onStake={handleStake} withdrawAmount={withdrawAmount} setWithdrawAmount={setWithdrawAmount} onWithdraw={handleUnstake} sendTo={sendTo} setSendTo={setSendTo} sendAmount={sendAmount} setSendAmount={setSendAmount} onSend={handleSend} live={live} />} />
           <Route path="/history"  element={<HistoryPage history={history} />} />
-          <Route path="/analysis" element={<AnalysisPage balance={walletBalance?.formatted} staked={stakedFormatted} />} />
+          <Route path="/analysis" element={<AnalysisPage balance={walletBalance?.formatted} staked={stakedFormatted} vaultBalance={vaultBalanceFormatted} live={live} />} />
         </Routes>
       </main>
     </div>
@@ -727,9 +952,5 @@ function AppContent() {
 }
 
 export default function App() {
-  return (
-    <Router>
-      <AppContent />
-    </Router>
-  );
+  return <Router><AppContent /></Router>;
 }

@@ -2,15 +2,26 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/reown.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Reown Appkit Example</title>
-    <!-- Add this shim to fix 'global is not defined' errors -->
-    <script>
-      if (window.global === undefined) {
-        window.global = window;
-      }
-    </script>
+
+    <!-- ── Identity ──────────────────────────────────────────────── -->
+    <title>Mezo Legacy — Bitcoin L2 DeFi</title>
+    <meta name="description" content="Vault deposits, staking, and live on-chain data on the Mezo Network — an EVM-compatible Bitcoin Layer 2." />
+    <meta name="application-name" content="Mezo Legacy" />
+    <meta name="theme-color" content="#7c6ef7" />
+
+    <!-- ── Favicon ───────────────────────────────────────────────── -->
+    <link rel="icon"             type="image/svg+xml" href="/mezo-icon.svg" />
+    <link rel="apple-touch-icon"                      href="/mezo-icon.svg" />
+
+    <!-- ── Open Graph ────────────────────────────────────────────── -->
+    <meta property="og:title"       content="Mezo Legacy — Bitcoin L2 DeFi" />
+    <meta property="og:description" content="Deposit BTC, stake for 4.8% APY, and track live on-chain data on Mezo Network." />
+    <meta property="og:type"        content="website" />
+    <meta property="og:url"         content="https://mezo-legacy-ainegb.vercel.app" />
+
+    <!-- ── Polyfill ──────────────────────────────────────────────── -->
+    <script>if (window.global === undefined) window.global = window;</script>
   </head>
   <body>
     <div id="root"></div>

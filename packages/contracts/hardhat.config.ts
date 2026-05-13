@@ -3,7 +3,7 @@ import "@nomicfoundation/hardhat-toolbox";
 import * as dotenv from "dotenv";
 dotenv.config();
 
-const DEPLOYER_KEY = process.env.DEPLOYER_PRIVATE_KEY || "";
+const DEPLOYER_KEY = process.env.DEPLOYER_PRIVATE_KEY || process.env.PRIVATE_KEY || "";
 const MEZO_RPC    = process.env.MEZO_RPC_URL || "https://rpc.test.mezo.org";
 
 const config: HardhatUserConfig = {

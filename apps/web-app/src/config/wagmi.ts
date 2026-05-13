@@ -1,25 +1,37 @@
-/// <reference types="vite/client" />
 import { createConfig, http } from "wagmi";
-import { sepolia } from "wagmi/chains";
+import { defineChain } from "viem";
 import { injected, metaMask, walletConnect } from "wagmi/connectors";
 
 const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID as string;
+const rpcUrl    = (import.meta.env.VITE_RPC_URL as string) || "https://rpc.test.mezo.org";
 
 if (!projectId) {
-  console.warn("[wagmi] VITE_WALLETCONNECT_PROJECT_ID is not set. WalletConnect will not work.");
+  console.warn("[wagmi] VITE_WALLETCONNECT_PROJECT_ID is not set.");
 }
 
-const rpcUrl = import.meta.env.VITE_RPC_URL as string | undefined;
+export const mezoTestnet = defineChain({
+  id: 31611,
+  name: "Mezo Testnet",
+  nativeCurrency: { name: "Bitcoin", symbol: "BTC", decimals: 18 },
+  rpcUrls: {
+    default: { http: [rpcUrl] },
+    public:  { http: ["https://rpc.test.mezo.org"] },
+  },
+  blockExplorers: {
+    default: { name: "Mezo Explorer", url: "https://explorer.test.mezo.org" },
+  },
+  testnet: true,
+});
 
 export const config = createConfig({
-  chains: [sepolia],
+  chains: [mezoTestnet],
   connectors: [
     injected(),
     metaMask(),
     ...(projectId ? [walletConnect({ projectId })] : []),
   ],
   transports: {
-    [sepolia.id]: http(rpcUrl),
+    [mezoTestnet.id]: http(rpcUrl),
   },
 });
 
