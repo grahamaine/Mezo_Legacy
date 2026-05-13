@@ -1,0 +1,132 @@
+---
+x-envfile: &envfile
+  env_file:
+    - ${NETWORK}.env
+
+x-platform: &platform
+  platform: linux/amd64
+
+# Enable logging to journald by default
+x-logging: &logging
+  logging:
+    driver: ${DOCKER_LOG_DRIVER:-journald}
+
+x-user: &user
+  user: "65532:65532" # nonroot user used in distroless image
+
+x-networks: &networks
+  networks:
+    - mezo
+
+services:
+  #
+  # Operations
+  #
+  cli:
+    <<: [*platform, *envfile, *logging, *user]
+    container_name: cli
+    image: local/mezod-cli # Use v-kit.sh to build the image
+    deploy:
+      # Make sure that the service won't run for "docker compose up".
+      # It is intended to be run manually.
+      replicas: 0
+    working_dir: ${MEZOD_HOME}
+    networks:
+      - mezo
+    volumes:
+      - ${LOCAL_BIND_PATH}:${MEZOD_HOME}
+
+  #
+  # PHASE: runtime
+  #
+  ethereum-sidecar:
+    <<: [*platform, *logging, *user,  *networks]
+    container_name: ethereum-sidecar
+    image: ${DOCKER_IMAGE}
+    entrypoint: 
+      - /bin/sh
+      - -c
+    command:
+      - |
+        yes "${KEYRING_PASSWORD}" | mezod ethereum-sidecar \
+          --home=${MEZOD_HOME} \
+          --log_format=json \
+          --ethereum-sidecar.server.ethereum-node-address=${MEZOD_ETHEREUM_SIDECAR_SERVER_ETHEREUM_NODE_ADDRESS} \
+          --ethereum-sidecar.server.network=${MEZOD_ETHEREUM_SIDECAR_SERVER_NETWORK} \
+          --ethereum-sidecar.server.assets-unlocked-endpoint=mezod:9090 \
+          --keyring-backend=file \
+          --key-name=${KEYRING_NAME}
+    restart: always
+    expose:
+      - 7500
+    cap_drop:
+      - ALL
+    volumes:
+      - ${LOCAL_BIND_PATH}:${MEZOD_HOME}  
+
+  connect-sidecar:
+    # Dockerfile: https://github.com/skip-mev/connect/blob/main/contrib/images/connect.sidecar.prod.Dockerfile
+    <<: [*platform, *logging,  *networks]
+    container_name: connect-sidecar
+    image: ghcr.io/skip-mev/connect-sidecar:v2.1.2
+    entrypoint: []
+    command:
+      - connect
+      - --disable-telemetry
+      - --log-disable-file-rotation
+      - --port=8080
+      - --market-map-endpoint=mezod:9090
+    expose:
+      - 8080
+    restart: always
+    cap_drop:
+      - ALL
+
+  mezod:
+    <<: [*platform, *envfile, *logging, *user]
+    container_name: mezod
+    image: ${DOCKER_IMAGE}
+    command:
+      - mezod
+      - start
+      - --home=${MEZOD_HOME}
+      - --metrics
+      - --log_format=${MEZOD_LOG_FORMAT}
+      - --log_level=${MEZOD_LOG_LEVEL}
+      - --log_no_color
+    restart: always
+    # Expose the ports for public access
+    ports:
+      - 26656:26656  # p2p
+      - 26657:26657  # rpc
+      - 1317:1317    # api
+      - 9090:9090    # grpc
+      - 8545:8545    # json-rpc
+      - 8546:8546    # json-rpc-ws
+    # Expose the ports for internal access only (monitoring)
+    expose:
+      - 6065   # metrics of EVM (app.toml) on /debug/metrics/prometheus
+      - 26660  # metrics of cometbft (config.toml) on /
+    depends_on:
+      ethereum-sidecar:
+        condition: service_started
+      connect-sidecar:
+        condition: service_started
+    cap_drop:
+      - ALL
+    networks:
+      - mezo
+    volumes:
+      - ${LOCAL_BIND_PATH}:${MEZOD_HOME}
+      # Custom configuration (optional)
+      # - ${LOCAL_CUSTOM_CONF_APP_TOML}:${MEZOD_CUSTOM_CONF_APP_TOML}
+      # - ${LOCAL_CUSTOM_CONF_CLIENT_TOML}:${MEZOD_CUSTOM_CONF_CLIENT_TOML}
+      # - ${LOCAL_CUSTOM_CONF_CONFIG_TOML}:${MEZOD_CUSTOM_CONF_CONFIG_TOML}
+    labels:
+      promtail.scrape: "true"
+      prometheus.scrape: "false" # mezod target is configured as a static target in Prometheus
+
+networks:
+  mezo:
+    name: mezo
+    driver: bridge

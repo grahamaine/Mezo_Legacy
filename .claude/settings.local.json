@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep -l \"from.*@mezo\\\\|from.*@shared\")",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(vercel --version)",
+      "Bash(vercel whoami *)",
+      "Bash(vercel --prod --yes)",
+      "Bash(vercel link *)",
+      "Bash(vercel --prod --yes --scope ainegb --env VITE_PROJECT_ID=9345e4dd75c81818985479c8a2beb79f --env VITE_WALLETCONNECT_PROJECT_ID=9345e4dd75c81818985479c8a2beb79f --env VITE_RPC_URL=https://rpc.test.mezo.org)",
+      "Bash(vercel --prod --yes --scope ainegb)",
+      "Bash(git checkout *)",
+      "Bash(git add *)"
+    ]
+  }
+}

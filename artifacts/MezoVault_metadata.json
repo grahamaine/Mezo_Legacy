@@ -1,0 +1,179 @@
+{
+	"compiler": {
+		"version": "0.8.30+commit.73712a01"
+	},
+	"language": "Solidity",
+	"output": {
+		"abi": [
+			{
+				"inputs": [],
+				"stateMutability": "nonpayable",
+				"type": "constructor"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "user",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "Deposited",
+				"type": "event"
+			},
+			{
+				"anonymous": false,
+				"inputs": [
+					{
+						"indexed": true,
+						"internalType": "address",
+						"name": "user",
+						"type": "address"
+					},
+					{
+						"indexed": false,
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "Withdrawn",
+				"type": "event"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "address",
+						"name": "user",
+						"type": "address"
+					}
+				],
+				"name": "balanceOf",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "deposit",
+				"outputs": [],
+				"stateMutability": "payable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "owner",
+				"outputs": [
+					{
+						"internalType": "address",
+						"name": "",
+						"type": "address"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "sweep",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			},
+			{
+				"inputs": [],
+				"name": "totalAssets",
+				"outputs": [
+					{
+						"internalType": "uint256",
+						"name": "",
+						"type": "uint256"
+					}
+				],
+				"stateMutability": "view",
+				"type": "function"
+			},
+			{
+				"inputs": [
+					{
+						"internalType": "uint256",
+						"name": "amount",
+						"type": "uint256"
+					}
+				],
+				"name": "withdraw",
+				"outputs": [],
+				"stateMutability": "nonpayable",
+				"type": "function"
+			}
+		],
+		"devdoc": {
+			"details": "A secure vault for managing deposits and withdrawals on the Mezo Network.",
+			"kind": "dev",
+			"methods": {
+				"balanceOf(address)": {
+					"details": "Returns the balance of a specific user."
+				},
+				"deposit()": {
+					"details": "Allows users to deposit Mezo BTC/ETH into the vault."
+				},
+				"sweep()": {
+					"details": "Emergency function for the owner to recover funds sent to the contract by mistake."
+				},
+				"totalAssets()": {
+					"details": "Returns the total balance held by the contract."
+				},
+				"withdraw(uint256)": {
+					"details": "Allows users to withdraw their deposited funds. Uses the secure .call method and Checks-Effects-Interactions pattern."
+				}
+			},
+			"title": "MezoVault",
+			"version": 1
+		},
+		"userdoc": {
+			"kind": "user",
+			"methods": {},
+			"version": 1
+		}
+	},
+	"settings": {
+		"compilationTarget": {
+			"web-app/contracts/MezoVault.sol": "MezoVault"
+		},
+		"evmVersion": "prague",
+		"libraries": {},
+		"metadata": {
+			"bytecodeHash": "ipfs"
+		},
+		"optimizer": {
+			"enabled": false,
+			"runs": 200
+		},
+		"remappings": []
+	},
+	"sources": {
+		"web-app/contracts/MezoVault.sol": {
+			"keccak256": "0x7be624e94bcbbd429a1a3c82c12cde4723c348b9466fe1aee1922576a6a87eba",
+			"license": "MIT",
+			"urls": [
+				"bzz-raw://699eeb0fc266e675b820ebf5aba4f1f3de67404a9f62a9e8c5b50f0f4e8be104",
+				"dweb:/ipfs/QmZzvejHrPjagZeAExtSqmje33NSiTYwvw7X3NnkKXwpaA"
+			]
+		}
+	},
+	"version": 1
+}

@@ -1,0 +1,65 @@
+# ── Dependencies ──────────────────────────────────────────
+node_modules/
+.pnp
+.pnp.js
+
+# ── Build outputs ─────────────────────────────────────────
+dist/
+build/
+out/
+.next/
+.nuxt/
+
+# ── Hardhat / Contracts ───────────────────────────────────
+packages/contracts/cache/
+packages/contracts/artifacts/
+packages/contracts/typechain-types/
+packages/contracts/deployed-addresses.json
+
+# ── Environment files ─────────────────────────────────────
+.env
+.env.local
+.env.*.local
+# Keep examples in git:
+!.env.example
+
+# ── Logs ─────────────────────────────────────────────────
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ── Turbo ─────────────────────────────────────────────────
+.turbo/
+
+# ── Vercel ────────────────────────────────────────────────
+.vercel/
+
+# ── TypeScript ────────────────────────────────────────────
+*.tsbuildinfo
+
+# ── Editor ────────────────────────────────────────────────
+.DS_Store
+.idea/
+*.swp
+*.swo
+Thumbs.db
+
+# ── Flutter / Dart (mobile-app only) ─────────────────────
+**/doc/api/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+apps/mobile-app/build/
+
+# ── Mezo node data ────────────────────────────────────────
+data/
+infrastructure/mezod.tar.gz
+
+# ── Misc ─────────────────────────────────────────────────
+*.class
+*.pyc
+coverage/

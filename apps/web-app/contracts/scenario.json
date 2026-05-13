@@ -1,0 +1,26 @@
+{
+  "accounts": {
+    "account{0}": "0x3EEE5c7f94Ba069433b4459a4574764b4ac7B7d6"
+  },
+  "linkReferences": {},
+  "transactions": [
+    {
+      "timestamp": 1778142407128,
+      "record": {
+        "value": "0",
+        "inputs": "()",
+        "parameters": [],
+        "name": "",
+        "type": "constructor",
+        "abi": "0x518674ab2b227e5f11e9084f615d57663cde47bce1ba168b4c19c7ee22a73d70",
+        "contractName": "MezoVault",
+        "bytecode": "6080604052348015600f57600080fd5b50603f80601d6000396000f3fe6080604052600080fdfea2646970667358221220f936ccfa60051a29008165684f590c825b8d4bccd8eea602a37fe9d71515121d64736f6c634300081e0033",
+        "linkReferences": {},
+        "from": "account{0}"
+      }
+    }
+  ],
+  "abis": {
+    "0x518674ab2b227e5f11e9084f615d57663cde47bce1ba168b4c19c7ee22a73d70": []
+  }
+}

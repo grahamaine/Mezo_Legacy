@@ -1,0 +1,19 @@
+{
+  "name": "mezo-legacy",
+  "private": true,
+  "packageManager": "npm@11.12.1",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "compile": "turbo compile",
+    "deploy:testnet": "npm run deploy:testnet --workspace=@mezo/contracts"
+  },
+  "devDependencies": {
+    "turbo": "latest"
+  }
+}

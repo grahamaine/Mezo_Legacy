@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "composite": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    /* THE FIX FOR VIEM ERRORS: */
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true
+  },
+  "include": [],
+  "references": [
+    { "path": "./packages/mezo-core" },
+    { "path": "./packages/shared" }
+  ]
+}

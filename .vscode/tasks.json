@@ -1,0 +1,71 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Mezo: Manager (Prompt)",
+            "type": "shell",
+            "command": "./manage.sh ${input:mezoCommand}",
+            "problemMatcher": [],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "focus": true
+            }
+        },
+        {
+            "label": "Mezo: View Logs (Tail)",
+            "type": "shell",
+            "command": "./manage.sh logs",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "focus": false
+            }
+        },
+        {
+            "label": "Mezo: Open Container Shell",
+            "type": "shell",
+            "command": "./manage.sh shell",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated",
+                "focus": true
+            }
+        },
+        {
+            "label": "Helm: Lint and Template",
+            "type": "shell",
+            "command": "helm template mezod ./charts/mezod --values ./charts/mezod/values.yaml",
+            "group": "test",
+            "problemMatcher": [],
+            "presentation": {
+                "reveal": "always",
+                "panel": "dedicated"
+            }
+        }
+    ],
+    "inputs": [
+        {
+            "id": "mezoCommand",
+            "type": "pickString",
+            "description": "Select a validator action:",
+            "options": [
+                { "label": "Start Node", "value": "start" },
+                { "label": "Stop Node", "value": "stop" },
+                { "label": "Show Info", "value": "validator-info" },
+                { "label": "Export Private Key", "value": "export-private-key" },
+                { "label": "Init Keyring", "value": "init-keyring" },
+                { "label": "Init Config", "value": "init-config" },
+                { "label": "Reset Data", "value": "reset" },
+                { "label": "Help", "value": "help" }
+            ],
+            "default": "validator-info"
+        }
+    ]
+}

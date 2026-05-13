@@ -1,0 +1,22 @@
+{
+  "name": "@mezo/contracts",
+  "version": "1.0.0",
+  "description": "Mezo Legacy smart contracts — MezoVault and MezoStaking",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "compile": "hardhat compile",
+    "deploy:testnet": "hardhat run scripts/deploy.ts --network mezo-testnet",
+    "deploy:local": "hardhat run scripts/deploy.ts --network hardhat",
+    "test": "hardhat test",
+    "clean": "hardhat clean"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^5.0.0",
+    "hardhat": "^2.22.0",
+    "dotenv": "^16.4.5",
+    "typescript": "^5.5.4",
+    "ts-node": "^10.9.2",
+    "@types/node": "^22.0.0"
+  }
+}
