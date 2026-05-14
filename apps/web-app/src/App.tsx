@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import mezoLogo from './assets/mezo-icon.svg';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppKit } from '@reown/appkit/react';
 import {
@@ -1107,6 +1108,36 @@ function AppContent() {
   );
 }
 
+function SplashScreen({ onDone }: { onDone: () => void }) {
+  const [phase, setPhase] = useState<'enter' | 'pulse' | 'exit'>('enter');
+  const doneRef = useRef(false);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setPhase('pulse'), 600);
+    const t2 = setTimeout(() => setPhase('exit'), 2400);
+    const t3 = setTimeout(() => { if (!doneRef.current) { doneRef.current = true; onDone(); } }, 3000);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [onDone]);
+
+  return (
+    <div className={`splash splash--${phase}`}>
+      <div className="splash__ring splash__ring--1" />
+      <div className="splash__ring splash__ring--2" />
+      <div className="splash__ring splash__ring--3" />
+      <img src={mezoLogo} className="splash__logo" alt="Mezo" />
+      <p className="splash__wordmark">MEZO</p>
+    </div>
+  );
+}
+
 export default function App() {
-  return <Router><AppContent /></Router>;
+  const [ready, setReady] = useState(false);
+  return (
+    <>
+      {!ready && <SplashScreen onDone={() => setReady(true)} />}
+      <div className={`app-wrapper ${ready ? 'app-wrapper--visible' : ''}`}>
+        <Router><AppContent /></Router>
+      </div>
+    </>
+  );
 }
