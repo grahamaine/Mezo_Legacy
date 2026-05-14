@@ -1,5 +1,5 @@
 /* ─── Fonts ──────────────────────────────────────────────────────────────────── */
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Syne:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Oswald:wght@300;400;500;600;700&family=Syne:wght@400;500;600;700;800&display=swap');
 
 /* ─── Variables ──────────────────────────────────────────────────────────────── */
 :root {
@@ -25,7 +25,7 @@
   --blue:         #38bdf8;
   --blue-bg:      rgba(56,189,248,0.10);
   --mono:         'DM Mono', monospace;
-  --sans:         'Syne', sans-serif;
+  --sans:         'Oswald', 'Syne', sans-serif;
   --radius-sm:    6px;
   --radius-md:    10px;
   --radius-lg:    14px;
@@ -1064,8 +1064,8 @@ input { font-family: var(--mono); }
   filter: drop-shadow(0 0 32px rgba(124,110,247,0.6));
 }
 .splash__wordmark {
-  font-family: 'Syne', sans-serif;
-  font-size: 22px; font-weight: 800;
+  font-family: 'Oswald', sans-serif;
+  font-size: 22px; font-weight: 700;
   letter-spacing: 0.35em;
   color: var(--accent2);
   opacity: 0.9;
