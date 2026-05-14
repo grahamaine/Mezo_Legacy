@@ -2,7 +2,7 @@ import { createAppKit } from "@reown/appkit/react";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import type { AppKitNetwork } from "@reown/appkit/networks";
 
-const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID as string;
+const projectId = (import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || import.meta.env.VITE_PROJECT_ID) as string;
 const rpcUrl    = (import.meta.env.VITE_RPC_URL as string) || "https://rpc.test.mezo.org";
 
 if (!projectId) {
