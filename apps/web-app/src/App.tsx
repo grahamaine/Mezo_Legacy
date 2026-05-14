@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppKit } from '@reown/appkit/react';
 import {
   useAccount, useConnect, useDisconnect, useBalance,
@@ -108,10 +108,17 @@ function TopBar({ title, blockNumber, gasPriceGwei }: { title: string; blockNumb
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { open } = useAppKit();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   return (
     <div className="topbar">
-      <div>
+      <div className="topbar-left">
+        {location.pathname !== '/' && (
+          <button className="topbar-back" onClick={() => navigate(-1)}>
+            ← Back
+          </button>
+        )}
         <h1 className="page-title">{title}</h1>
         <p className="page-sub">Mezo Testnet (Chain 31611) · Auto-refreshing</p>
       </div>
@@ -964,6 +971,30 @@ function SettingsPage() {
 
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
+// ─── Mobile Bottom Nav ────────────────────────────────────────────────────────
+
+function MobileNav() {
+  const location = useLocation();
+  const links = [
+    { to: '/',         label: 'Home',     icon: '⊞' },
+    { to: '/borrow',   label: 'Borrow',   icon: '₿'  },
+    { to: '/vault',    label: 'Vault',    icon: '🏦' },
+    { to: '/staking',  label: 'Staking',  icon: '🔥' },
+    { to: '/history',  label: 'History',  icon: '◷'  },
+    { to: '/settings', label: 'Settings', icon: '⚙'  },
+  ];
+  return (
+    <nav className="mobile-nav">
+      {links.map(l => (
+        <Link key={l.to} to={l.to} className={`mobile-nav-item${location.pathname === l.to ? ' active' : ''}`}>
+          <span className="mobile-nav-icon">{l.icon}</span>
+          <span className="mobile-nav-label">{l.label}</span>
+        </Link>
+      ))}
+    </nav>
+  );
+}
+
 function AppContent() {
   const { address, isConnected } = useAccount();
   const { disconnect }           = useDisconnect();
@@ -1071,6 +1102,7 @@ function AppContent() {
           <Route path="/settings" element={<SettingsPage />} />
         </Routes>
       </main>
+      <MobileNav />
     </div>
   );
 }
