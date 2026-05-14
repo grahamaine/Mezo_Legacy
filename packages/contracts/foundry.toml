@@ -1,0 +1,26 @@
+[profile.default]
+src      = "contracts"
+out      = "out"
+libs     = ["lib"]
+evm_version = "london"
+
+# ── Mezo Testnet (chain 31611) ────────────────────────────────────────────────
+[profile.testnet]
+chain_id    = 31611
+eth_rpc_url = "https://rpc.test.mezo.org"
+evm_version = "london"
+
+# ── Mezo Mainnet (chain 31612) ────────────────────────────────────────────────
+[profile.mainnet]
+chain_id    = 31612
+eth_rpc_url = "https://rpc-http.mezo.boar.network"
+evm_version = "london"
+
+# Alternative mainnet RPC providers (uncomment to switch):
+# eth_rpc_url = "https://mainnet.mezo.public.validationcloud.io"
+# eth_rpc_url = "https://rpc_evm-mezo.imperator.co"
+# eth_rpc_url = "https://mezo.drpc.org"
+
+[etherscan]
+mezo-testnet = { key = "${MEZO_EXPLORER_API_KEY}", url = "https://explorer.test.mezo.org/api", chain = 31611 }
+mezo-mainnet = { key = "${MEZO_EXPLORER_API_KEY}", url = "https://explorer.mezo.org/api",      chain = 31612 }
