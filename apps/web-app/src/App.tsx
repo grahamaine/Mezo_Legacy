@@ -1,4 +1,9 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import {
+  LayoutDashboard, Coins, Vault, Flame, Clock3, TrendingUp,
+  Settings, Shield, ArrowDownLeft, ArrowUpRight, ArrowDown,
+  CheckCircle, Send, Home,
+} from 'lucide-react';
 const mezoLogo = '/mezo-icon.svg';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppKit } from '@reown/appkit/react';
@@ -70,13 +75,13 @@ function timeAgo(ts: number) {
   return `${Math.floor(s / 86400)}d ago`;
 }
 
-const TX_META: Record<string, { icon: string; color: string }> = {
-  Stake:    { icon: '🔥', color: 'var(--accent2)'  },
-  Withdraw: { icon: '↙',  color: 'var(--blue)'     },
-  Send:     { icon: '↗',  color: 'var(--green)'    },
-  Deposit:  { icon: '⬇',  color: 'var(--accent)'   },
-  Borrow:   { icon: '₿',  color: '#f59e0b'         },
-  Repay:    { icon: '✓',  color: 'var(--green)'    },
+const TX_META: Record<string, { icon: React.ReactNode; color: string }> = {
+  Stake:    { icon: <Flame    size={15} />, color: 'var(--accent2)'  },
+  Withdraw: { icon: <ArrowDownLeft size={15} />, color: 'var(--blue)' },
+  Send:     { icon: <Send     size={15} />, color: 'var(--green)'    },
+  Deposit:  { icon: <ArrowDown size={15} />, color: 'var(--accent)'  },
+  Borrow:   { icon: <Coins    size={15} />, color: '#f59e0b'         },
+  Repay:    { icon: <CheckCircle size={15} />, color: 'var(--green)' },
 };
 
 // ─── Tooltip ─────────────────────────────────────────────────────────────────
@@ -144,12 +149,12 @@ function TopBar({ title, blockNumber, gasPriceGwei }: { title: string; blockNumb
 function Sidebar({ address, isConnected, balance, musdBalance, onConnect, onDisconnect, connectors }: any) {
   const location = useLocation();
   const links = [
-    { to: '/',        label: 'Dashboard', icon: '⊞', badge: null       },
-    { to: '/borrow',  label: 'Borrow',    icon: '₿',  badge: '1% APR'  },
-    { to: '/vault',   label: 'Vault',     icon: '🏦', badge: null       },
-    { to: '/staking', label: 'Staking',   icon: '🔥', badge: '4.8%'    },
-    { to: '/history', label: 'History',   icon: '◷',  badge: null       },
-    { to: '/analysis',label: 'Analysis',  icon: '↗',  badge: null       },
+    { to: '/',        label: 'Dashboard', icon: <LayoutDashboard size={17} />, badge: null       },
+    { to: '/borrow',  label: 'Borrow',    icon: <Coins           size={17} />, badge: '1% APR'  },
+    { to: '/vault',   label: 'Vault',     icon: <Vault           size={17} />, badge: null       },
+    { to: '/staking', label: 'Staking',   icon: <Flame           size={17} />, badge: '4.8%'    },
+    { to: '/history', label: 'History',   icon: <Clock3          size={17} />, badge: null       },
+    { to: '/analysis',label: 'Analysis',  icon: <TrendingUp      size={17} />, badge: null       },
   ];
   const musdFmt = musdBalance ? parseFloat(formatEther(musdBalance as bigint)).toFixed(2) : '0.00';
 
@@ -170,8 +175,8 @@ function Sidebar({ address, isConnected, balance, musdBalance, onConnect, onDisc
           </Link>
         ))}
         <div className="nav-section-label" style={{ marginTop: 20 }}>Settings</div>
-        <Link to="/settings" className={`nav-item${location.pathname === '/settings' ? ' active' : ''}`}><span className="nav-icon">⚙</span>Network</Link>
-        <Link to="/settings" className={`nav-item${location.pathname === '/settings' ? ' active' : ''}`}><span className="nav-icon">🛡</span>Security</Link>
+        <Link to="/settings" className={`nav-item${location.pathname === '/settings' ? ' active' : ''}`}><span className="nav-icon"><Settings size={17} /></span>Network</Link>
+        <Link to="/settings" className={`nav-item${location.pathname === '/settings' ? ' active' : ''}`}><span className="nav-icon"><Shield size={17} /></span>Security</Link>
       </nav>
       <div className="wallet-area">
         {isConnected ? (
@@ -188,7 +193,7 @@ function Sidebar({ address, isConnected, balance, musdBalance, onConnect, onDisc
               ≈ ${(parseFloat(balance?.formatted || '0') * 97500).toLocaleString('en-US', { maximumFractionDigits: 2 })} USD
             </div>
             <div className="wallet-actions">
-              <button className="wallet-btn primary">↑ Send</button>
+              <button className="wallet-btn primary"><ArrowUpRight size={13} /> Send</button>
               <button className="wallet-btn" onClick={onDisconnect}>Disconnect</button>
             </div>
           </div>
@@ -977,12 +982,12 @@ function SettingsPage() {
 function MobileNav() {
   const location = useLocation();
   const links = [
-    { to: '/',         label: 'Home',     icon: '⊞' },
-    { to: '/borrow',   label: 'Borrow',   icon: '₿'  },
-    { to: '/vault',    label: 'Vault',    icon: '🏦' },
-    { to: '/staking',  label: 'Staking',  icon: '🔥' },
-    { to: '/history',  label: 'History',  icon: '◷'  },
-    { to: '/settings', label: 'Settings', icon: '⚙'  },
+    { to: '/',         label: 'Home',     icon: <Home            size={20} /> },
+    { to: '/borrow',   label: 'Borrow',   icon: <Coins           size={20} /> },
+    { to: '/vault',    label: 'Vault',    icon: <Vault           size={20} /> },
+    { to: '/staking',  label: 'Staking',  icon: <Flame           size={20} /> },
+    { to: '/history',  label: 'History',  icon: <Clock3          size={20} /> },
+    { to: '/settings', label: 'Settings', icon: <Settings        size={20} /> },
   ];
   return (
     <nav className="mobile-nav">
