@@ -4,7 +4,7 @@ import { useAppKit } from '@reown/appkit/react';
 import {
   useAccount, useConnect, useDisconnect, useBalance,
   useSendTransaction, useWaitForTransactionReceipt,
-  useReadContract, useWriteContract
+  useReadContract, useWriteContract, useChainId, useSwitchChain
 } from 'wagmi';
 import { parseEther, formatEther } from 'viem';
 import {
@@ -162,8 +162,8 @@ function Sidebar({ address, isConnected, balance, musdBalance, onConnect, onDisc
           </Link>
         ))}
         <div className="nav-section-label" style={{ marginTop: 20 }}>Settings</div>
-        <div className="nav-item"><span className="nav-icon">⚙</span>Network</div>
-        <div className="nav-item"><span className="nav-icon">🛡</span>Security</div>
+        <Link to="/settings" className={`nav-item${location.pathname === '/settings' ? ' active' : ''}`}><span className="nav-icon">⚙</span>Network</Link>
+        <Link to="/settings" className={`nav-item${location.pathname === '/settings' ? ' active' : ''}`}><span className="nav-icon">🛡</span>Security</Link>
       </nav>
       <div className="wallet-area">
         {isConnected ? (
@@ -852,6 +852,116 @@ function AnalysisPage({ balance, staked, vaultBalance, live }: any) {
   );
 }
 
+// ─── Settings Page ───────────────────────────────────────────────────────────
+
+function SettingsPage() {
+  const { address, isConnected } = useAccount();
+  const { disconnect }           = useDisconnect();
+  const { open }                 = useAppKit();
+  const chainId                  = useChainId();
+  const { switchChain }          = useSwitchChain();
+  const [copied, setCopied]      = useState(false);
+
+  const copyAddress = () => {
+    if (!address) return;
+    navigator.clipboard.writeText(address);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  const networks = [
+    {
+      id: 31612, label: 'Mezo Mainnet', rpc: 'https://rpc-http.mezo.boar.network',
+      explorer: 'https://explorer.mezo.org', badge: 'Mainnet',
+    },
+    {
+      id: 31611, label: 'Mezo Testnet', rpc: 'https://rpc.test.mezo.org',
+      explorer: 'https://explorer.test.mezo.org', badge: 'Testnet',
+    },
+  ];
+
+  return (
+    <div className="page-content fade-in">
+      <TopBar title="Settings" />
+      <div className="content-wrap">
+
+        {/* ── Network ── */}
+        <div className="card" style={{ marginBottom: 24 }}>
+          <div className="card-header"><span className="card-title">⚙ Network</span></div>
+          <div style={{ padding: '0 0 8px' }}>
+            {networks.map(n => {
+              const active = chainId === n.id;
+              return (
+                <div key={n.id} className="settings-net-row" style={{ borderColor: active ? 'var(--accent)' : 'var(--border)' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span className={`pill ${active ? 'green' : ''}`} style={active ? {} : { background: 'rgba(255,255,255,0.05)', color: 'var(--muted)' }}>
+                      {active ? '● Active' : '○'}
+                    </span>
+                    <div>
+                      <div style={{ fontWeight: 700, fontSize: 14 }}>{n.label}</div>
+                      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
+                        Chain ID: {n.id} &nbsp;·&nbsp;
+                        <a href={n.explorer} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>Explorer ↗</a>
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2, fontFamily: 'monospace' }}>{n.rpc}</div>
+                    </div>
+                  </div>
+                  {!active && isConnected && (
+                    <button className="wallet-btn primary" style={{ marginLeft: 'auto' }}
+                      onClick={() => switchChain({ chainId: n.id })}>
+                      Switch
+                    </button>
+                  )}
+                  {!active && !isConnected && (
+                    <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--muted)' }}>Connect wallet to switch</span>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── Security ── */}
+        <div className="card">
+          <div className="card-header"><span className="card-title">🛡 Security</span></div>
+          <div style={{ padding: '8px 0' }}>
+            {isConnected ? (
+              <div>
+                <div className="settings-net-row" style={{ borderColor: 'var(--accent)' }}>
+                  <div>
+                    <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 4 }}>Connected Wallet</div>
+                    <div style={{ fontFamily: 'monospace', fontWeight: 700, fontSize: 14 }}>{address}</div>
+                  </div>
+                  <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
+                    <button className="wallet-btn" onClick={copyAddress}>{copied ? '✓ Copied' : 'Copy'}</button>
+                    <a href={`https://explorer.mezo.org/address/${address}`} target="_blank" rel="noreferrer"
+                      className="wallet-btn" style={{ textDecoration: 'none', textAlign: 'center' }}>Explorer ↗</a>
+                  </div>
+                </div>
+                <div style={{ marginTop: 16, padding: '12px 16px', background: 'rgba(239,68,68,0.06)', borderRadius: 10, border: '1px solid rgba(239,68,68,0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 13 }}>Disconnect Wallet</div>
+                    <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>Remove connection from this session</div>
+                  </div>
+                  <button className="wallet-btn" style={{ borderColor: '#ef4444', color: '#ef4444' }} onClick={() => disconnect()}>
+                    Disconnect
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div style={{ padding: '16px 0', textAlign: 'center' }}>
+                <div style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 12 }}>No wallet connected</div>
+                <button className="topbar-connect" onClick={() => open()}>Connect Wallet</button>
+              </div>
+            )}
+          </div>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
 function AppContent() {
@@ -958,6 +1068,7 @@ function AppContent() {
           <Route path="/staking" element={<StakingPage staked={stakedFormatted} balance={walletBalance?.formatted} isConnected={isConnected} stakeAmount={stakeAmount} setStakeAmount={setStakeAmount} onStake={handleStake} withdrawAmount={withdrawAmount} setWithdrawAmount={setWithdrawAmount} onWithdraw={handleUnstake} sendTo={sendTo} setSendTo={setSendTo} sendAmount={sendAmount} setSendAmount={setSendAmount} onSend={handleSend} live={live} />} />
           <Route path="/history"  element={<HistoryPage history={history} />} />
           <Route path="/analysis" element={<AnalysisPage balance={walletBalance?.formatted} staked={stakedFormatted} vaultBalance={vaultBalanceFormatted} live={live} />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Routes>
       </main>
     </div>
