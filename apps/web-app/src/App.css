@@ -279,6 +279,50 @@ input { font-family: var(--mono); }
   gap: 10px;
 }
 
+.topbar-connect {
+  padding: 7px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--accent);
+  background: transparent;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.topbar-connect:hover {
+  background: var(--accent);
+  color: #000;
+}
+
+.topbar-wallet {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(245,158,11,0.08);
+  border: 1px solid rgba(245,158,11,0.25);
+  border-radius: 20px;
+  padding: 5px 12px;
+}
+.topbar-addr {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text);
+}
+.topbar-disconnect {
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 11px;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.15s;
+}
+.topbar-disconnect:hover { color: #ef4444; }
+
 /* ─── Pills ───────────────────────────────────────────────────────────────────── */
 .pill {
   padding: 5px 12px;

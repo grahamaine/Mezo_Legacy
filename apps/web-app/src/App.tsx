@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import { useAppKit } from '@reown/appkit/react';
 import {
   useAccount, useConnect, useDisconnect, useBalance,
   useSendTransaction, useWaitForTransactionReceipt,
@@ -104,6 +105,10 @@ function MetricCard({ label, value, sub, change, changeDir, accent }: any) {
 }
 
 function TopBar({ title, blockNumber, gasPriceGwei }: { title: string; blockNumber?: bigint; gasPriceGwei?: number }) {
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
+  const { open } = useAppKit();
+
   return (
     <div className="topbar">
       <div>
@@ -113,6 +118,14 @@ function TopBar({ title, blockNumber, gasPriceGwei }: { title: string; blockNumb
       <div className="topbar-right">
         <div className="pill amber"><span className="blink">◉</span> Block {blockNumber ? `#${blockNumber.toLocaleString()}` : '#...'}</div>
         <div className="pill green"><span>●</span> Mezo · {gasPriceGwei ?? 0} gwei</div>
+        {isConnected ? (
+          <div className="topbar-wallet">
+            <span className="topbar-addr"><span className="online-dot" />{address?.slice(0, 6)}…{address?.slice(-4)}</span>
+            <button className="topbar-disconnect" onClick={() => disconnect()}>Disconnect</button>
+          </div>
+        ) : (
+          <button className="topbar-connect" onClick={() => open()}>Connect Wallet</button>
+        )}
       </div>
     </div>
   );
