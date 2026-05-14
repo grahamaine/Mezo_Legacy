@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import mezoLogo from './assets/mezo-icon.svg';
+const mezoLogo = '/mezo-icon.svg';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppKit } from '@reown/appkit/react';
 import {
