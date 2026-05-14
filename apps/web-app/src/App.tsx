@@ -1140,7 +1140,7 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
       <div className="splash__ring splash__ring--1" />
       <div className="splash__ring splash__ring--2" />
       <div className="splash__ring splash__ring--3" />
-      <img src={mezoLogo} className="splash__logo" alt="Mezo" />
+      <img src="/mezo-icon.png" className="splash__logo" alt="Mezo" />
       <p className="splash__wordmark">MEZO</p>
     </div>
   );
@@ -1148,9 +1148,10 @@ function SplashScreen({ onDone }: { onDone: () => void }) {
 
 export default function App() {
   const [ready, setReady] = useState(false);
+  const handleDone = useCallback(() => setReady(true), []);
   return (
     <>
-      {!ready && <SplashScreen onDone={() => setReady(true)} />}
+      {!ready && <SplashScreen onDone={handleDone} />}
       <div className={`app-wrapper ${ready ? 'app-wrapper--visible' : ''}`}>
         <Router><AppContent /></Router>
       </div>

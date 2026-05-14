@@ -24,8 +24,8 @@
   --amber-bg:     rgba(245,158,11,0.10);
   --blue:         #38bdf8;
   --blue-bg:      rgba(56,189,248,0.10);
-  --mono:         'DM Mono', monospace;
-  --sans:         'Oswald', 'Syne', sans-serif;
+  --mono:         'Oswald', sans-serif;
+  --sans:         'Oswald', sans-serif;
   --radius-sm:    6px;
   --radius-md:    10px;
   --radius-lg:    14px;
@@ -1043,9 +1043,9 @@ input { font-family: var(--mono); }
 
 /* ─── Splash Screen ──────────────────────────────────────────────────────────── */
 @keyframes splash-enter {
-  0%   { opacity: 0; transform: scale(0.4); }
-  70%  { opacity: 1; transform: scale(1.08); }
-  100% { opacity: 1; transform: scale(1); }
+  0%   { opacity: 0.2; transform: scale(0.7); }
+  70%  { opacity: 1;   transform: scale(1.06); }
+  100% { opacity: 1;   transform: scale(1); }
 }
 @keyframes splash-exit {
   0%   { opacity: 1; transform: scale(1); }
