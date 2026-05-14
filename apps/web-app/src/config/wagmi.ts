@@ -22,21 +22,34 @@ export const mezoTestnet: AppKitNetwork = {
   },
 };
 
+export const mezoMainnet: AppKitNetwork = {
+  id: 31612,
+  name: "Mezo",
+  nativeCurrency: { name: "Bitcoin", symbol: "BTC", decimals: 18 },
+  rpcUrls: {
+    default: { http: ["https://rpc-http.mezo.boar.network"] },
+    public:  { http: ["https://mainnet.mezo.public.validationcloud.io"] },
+  },
+  blockExplorers: {
+    default: { name: "Mezo Explorer", url: "https://explorer.mezo.org" },
+  },
+};
+
 const wagmiAdapter = new WagmiAdapter({
-  networks: [mezoTestnet],
+  networks: [mezoMainnet, mezoTestnet],
   projectId: projectId || "",
   ssr: false,
 });
 
 createAppKit({
   adapters: [wagmiAdapter],
-  networks: [mezoTestnet] as [AppKitNetwork, ...AppKitNetwork[]],
+  networks: [mezoMainnet, mezoTestnet] as [AppKitNetwork, ...AppKitNetwork[]],
   projectId: projectId || "",
   metadata: {
     name: "Mezo Legacy",
     description: "Mezo Payments & Commerce DApp",
-    url: "https://mezo-legacy.vercel.app",
-    icons: ["https://mezo-legacy.vercel.app/og-thumbnail.png"],
+    url: "https://mezo-legacy-ainegb.vercel.app",
+    icons: ["https://mezo-legacy-ainegb.vercel.app/mezo-icon.png"],
   },
 });
 
