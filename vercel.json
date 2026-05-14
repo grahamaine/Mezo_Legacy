@@ -1,4 +1,8 @@
 {
   "version": 2,
-  "cleanUrls": true
+  "outputDirectory": "apps/web-app/dist",
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
