@@ -1001,6 +1001,16 @@ function MobileNav() {
   );
 }
 
+function BgCanvas() {
+  return (
+    <div className="bg-canvas" aria-hidden>
+      <div className="bg-blob bg-blob--1" />
+      <div className="bg-blob bg-blob--2" />
+      <div className="bg-blob bg-blob--3" />
+    </div>
+  );
+}
+
 function AppContent() {
   const { address, isConnected } = useAccount();
   const { disconnect }           = useDisconnect();
@@ -1085,6 +1095,7 @@ function AppContent() {
 
   return (
     <div className="app-layout">
+      <BgCanvas />
       <Sidebar address={address} isConnected={isConnected} balance={walletBalance} musdBalance={musdBalance} connectors={connectors} onConnect={connect} onDisconnect={disconnect} />
       <main className="app-main">
         <Routes>
