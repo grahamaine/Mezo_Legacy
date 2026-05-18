@@ -3,7 +3,11 @@ import {
   LayoutDashboard, Coins, Vault, Flame, Clock3, TrendingUp,
   Settings, Shield, ArrowDownLeft, ArrowUpRight, ArrowDown,
   CheckCircle, Send, Home, Info, Plus, XCircle,
+  DollarSign, ShoppingCart, Gamepad2,
 } from 'lucide-react';
+import PaymentsPage from './pages/PaymentsPage';
+import GamingPage   from './pages/GamingPage';
+import ShopPage     from './pages/ShopPage';
 const mezoLogo = '/mezo-icon.svg';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppKit } from '@reown/appkit/react';
@@ -165,7 +169,7 @@ function Sidebar({ address, isConnected, balance, musdBalance, onConnect, onDisc
         <div className="logo"><img src="/mezo-icon.png" alt="Mezo Legacy" className="logo-img" />Mezo Legacy</div>
         <div className="logo-sub">Mezo Testnet · v1.0.0</div>
       </div>
-      <nav className="nav">
+      <nav className="nav" style={{ overflowY: 'auto', flex: 1 }}>
         <div className="nav-section-label">Main</div>
         {links.map(l => (
           <Link key={l.to} to={l.to} className={`nav-item${location.pathname === l.to ? ' active' : ''}`}>
@@ -174,7 +178,11 @@ function Sidebar({ address, isConnected, balance, musdBalance, onConnect, onDisc
             {l.badge && <span className="nav-badge">{l.badge}</span>}
           </Link>
         ))}
-        <div className="nav-section-label" style={{ marginTop: 20 }}>Settings</div>
+        <div className="nav-section-label" style={{ marginTop: 14 }}>Consumer</div>
+        <Link to="/pay"   className={`nav-item${location.pathname === '/pay'   ? ' active' : ''}`}><span className="nav-icon"><DollarSign   size={17} /></span>Pay<span className="nav-badge">MUSD</span></Link>
+        <Link to="/shop"  className={`nav-item${location.pathname === '/shop'  ? ' active' : ''}`}><span className="nav-icon"><ShoppingCart  size={17} /></span>Shop</Link>
+        <Link to="/games" className={`nav-item${location.pathname === '/games' ? ' active' : ''}`}><span className="nav-icon"><Gamepad2      size={17} /></span>Games</Link>
+        <div className="nav-section-label" style={{ marginTop: 14 }}>Settings</div>
         <Link to="/settings" className={`nav-item${location.pathname === '/settings' ? ' active' : ''}`}><span className="nav-icon"><Settings size={17} /></span>Network</Link>
         <Link to="/settings" className={`nav-item${location.pathname === '/settings' ? ' active' : ''}`}><span className="nav-icon"><Shield size={17} /></span>Security</Link>
       </nav>
@@ -982,12 +990,12 @@ function SettingsPage() {
 function MobileNav() {
   const location = useLocation();
   const links = [
-    { to: '/',         label: 'Home',     icon: <Home            size={20} /> },
-    { to: '/borrow',   label: 'Borrow',   icon: <Coins           size={20} /> },
-    { to: '/vault',    label: 'Vault',    icon: <Vault           size={20} /> },
-    { to: '/staking',  label: 'Staking',  icon: <Flame           size={20} /> },
-    { to: '/history',  label: 'History',  icon: <Clock3          size={20} /> },
-    { to: '/settings', label: 'Settings', icon: <Settings        size={20} /> },
+    { to: '/',         label: 'Home',    icon: <Home          size={20} /> },
+    { to: '/pay',      label: 'Pay',     icon: <DollarSign    size={20} /> },
+    { to: '/shop',     label: 'Shop',    icon: <ShoppingCart  size={20} /> },
+    { to: '/games',    label: 'Games',   icon: <Gamepad2      size={20} /> },
+    { to: '/staking',  label: 'Staking', icon: <Flame         size={20} /> },
+    { to: '/settings', label: 'More',    icon: <Settings      size={20} /> },
   ];
   return (
     <nav className="mobile-nav">
@@ -1117,6 +1125,9 @@ function AppContent() {
           <Route path="/history"  element={<HistoryPage history={history} />} />
           <Route path="/analysis" element={<AnalysisPage balance={walletBalance?.formatted} staked={stakedFormatted} vaultBalance={vaultBalanceFormatted} live={live} />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/pay"      element={<PaymentsPage />} />
+          <Route path="/shop"     element={<ShopPage />} />
+          <Route path="/games"    element={<GamingPage />} />
         </Routes>
       </main>
       <MobileNav />
