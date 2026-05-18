@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   LayoutDashboard, Coins, Vault, Flame, Clock3, TrendingUp,
   Settings, Shield, ArrowDownLeft, ArrowUpRight, ArrowDown,
-  CheckCircle, Send, Home,
+  CheckCircle, Send, Home, Info, Plus, XCircle,
 } from 'lucide-react';
 const mezoLogo = '/mezo-icon.svg';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
@@ -468,7 +468,7 @@ function BorrowPage({
         <div className="action-row">
           {/* Borrow */}
           <div className="action-card">
-            <div className="action-label accent">₿ Deposit & Borrow MUSD</div>
+            <div className="action-label accent"><Coins size={11} />Deposit & Borrow MUSD</div>
             <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>BTC collateral (depositing now)</div>
             <div className="input-wrap">
               <input className="dapp-input" type="number" placeholder="0.000000" value={borrowBtc}
@@ -504,13 +504,13 @@ function BorrowPage({
               <div className="ib-row"><span>Lock-up period</span><span className="green">None</span></div>
             </div>
             <button className="action-btn stake" disabled={!isConnected} onClick={onBorrow}>
-              ₿ Borrow MUSD
+              Borrow MUSD
             </button>
           </div>
 
           {/* Repay */}
           <div className="action-card">
-            <div className="action-label blue">✓ Repay MUSD</div>
+            <div className="action-label blue"><CheckCircle size={11} />Repay MUSD</div>
             <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>
               Wallet MUSD: <span style={{ color: '#f59e0b' }}>${musdBal.toFixed(2)}</span>
             </div>
@@ -529,21 +529,21 @@ function BorrowPage({
               <div className="ib-row"><span>Settlement</span><span>instant</span></div>
             </div>
             <button className="action-btn withdraw" disabled={!isConnected || musdDebt === 0} onClick={onRepay}>
-              ✓ Repay MUSD
+              Repay MUSD
             </button>
             {hasPosition && (
               <button
                 onClick={onClosePosition}
                 disabled={!isConnected}
-                style={{ width: '100%', marginTop: 8, padding: '10px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 10, color: 'var(--red)', cursor: 'pointer', fontWeight: 700, fontSize: 13 }}>
-                ✗ Close Entire Position
+                style={{ width: '100%', marginTop: 8, padding: '10px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.3)', borderRadius: 10, color: 'var(--red)', cursor: 'pointer', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <XCircle size={13} />Close Entire Position
               </button>
             )}
           </div>
 
           {/* Add Collateral */}
           <div className="action-card">
-            <div className="action-label green">+ Add Collateral</div>
+            <div className="action-label green"><Plus size={11} />Add Collateral</div>
             <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>
               Improve your collateral ratio by adding more BTC
             </div>
@@ -566,7 +566,7 @@ function BorrowPage({
               </div>
             </div>
             <button className="action-btn send" disabled={!isConnected || !hasPosition} onClick={onAddCollateral}>
-              + Add BTC Collateral
+              Add BTC Collateral
             </button>
           </div>
         </div>
@@ -595,7 +595,7 @@ function VaultPage({ vaultBalance, tvl, isConnected, depositAmount, setDepositAm
         </div>
         <div className="action-row">
           <div className="action-card">
-            <div className="action-label accent">⬇ Deposit BTC</div>
+            <div className="action-label accent"><ArrowDown size={11} />Deposit BTC</div>
             <div className="input-wrap">
               <input className="dapp-input" type="number" placeholder="0.000000" value={depositAmount} onChange={e => setDepositAmount(e.target.value)} />
               <span className="input-unit">BTC</span>
@@ -604,10 +604,10 @@ function VaultPage({ vaultBalance, tvl, isConnected, depositAmount, setDepositAm
               <div className="ib-row"><span>Contract</span><span>MezoVault</span></div>
               <div className="ib-row"><span>Function</span><span className="green">deposit()</span></div>
             </div>
-            <button className="action-btn stake" disabled={!isConnected} onClick={onDeposit}>⬇ Confirm Deposit</button>
+            <button className="action-btn stake" disabled={!isConnected} onClick={onDeposit}>Confirm Deposit</button>
           </div>
           <div className="action-card">
-            <div className="action-label blue">↙ Withdraw BTC</div>
+            <div className="action-label blue"><ArrowDownLeft size={11} />Withdraw BTC</div>
             <div className="input-wrap">
               <input className="dapp-input" type="number" placeholder="0.000000" value={vaultWithdrawAmount} onChange={e => setVaultWithdrawAmount(e.target.value)} />
               <span className="input-unit">BTC</span>
@@ -620,10 +620,10 @@ function VaultPage({ vaultBalance, tvl, isConnected, depositAmount, setDepositAm
               <div className="ib-row"><span>Function</span><span className="blue">withdraw(uint256)</span></div>
               <div className="ib-row"><span>Fee</span><span className="green">None</span></div>
             </div>
-            <button className="action-btn withdraw" disabled={!isConnected} onClick={onVaultWithdraw}>↙ Withdraw from Vault</button>
+            <button className="action-btn withdraw" disabled={!isConnected} onClick={onVaultWithdraw}>Withdraw from Vault</button>
           </div>
           <div className="action-card">
-            <div className="action-label green">ℹ Vault Info</div>
+            <div className="action-label green"><Info size={11} />Vault Info</div>
             <div className="info-box" style={{ marginTop: 8 }}>
               <div className="ib-row"><span>Explorer</span><a href={`https://explorer.test.mezo.org/address/${VAULT_ADDRESS}`} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)', fontSize: 11 }}>View ↗</a></div>
               <div className="ib-row"><span>Total BTC</span><span>{tvlBtc.toFixed(6)}</span></div>
@@ -651,7 +651,7 @@ function StakingPage({ staked, balance, isConnected, stakeAmount, setStakeAmount
         </div>
         <div className="action-row">
           <div className="action-card">
-            <div className="action-label accent">🔥 Stake BTC</div>
+            <div className="action-label accent"><Flame size={11} />Stake BTC</div>
             <div className="input-wrap">
               <input className="dapp-input" type="number" placeholder="0.000000" value={stakeAmount} onChange={e => setStakeAmount(e.target.value)} />
               <span className="input-unit">BTC</span>
@@ -664,10 +664,10 @@ function StakingPage({ staked, balance, isConnected, stakeAmount, setStakeAmount
               <div className="ib-row"><span>APY</span><span className="green">4.8%</span></div>
               <div className="ib-row"><span>Lock-up</span><span>None</span></div>
             </div>
-            <button className="action-btn stake" disabled={!isConnected} onClick={onStake}>🔥 Confirm Stake</button>
+            <button className="action-btn stake" disabled={!isConnected} onClick={onStake}>Confirm Stake</button>
           </div>
           <div className="action-card">
-            <div className="action-label blue">↙ Unstake BTC</div>
+            <div className="action-label blue"><ArrowDownLeft size={11} />Unstake BTC</div>
             <div className="input-wrap">
               <input className="dapp-input" type="number" placeholder="0.000000" value={withdrawAmount} onChange={e => setWithdrawAmount(e.target.value)} />
               <span className="input-unit">BTC</span>
@@ -680,10 +680,10 @@ function StakingPage({ staked, balance, isConnected, stakeAmount, setStakeAmount
               <div className="ib-row"><span>Unlock</span><span className="amber">~24h</span></div>
               <div className="ib-row"><span>Slippage</span><span>0%</span></div>
             </div>
-            <button className="action-btn withdraw" disabled={!isConnected} onClick={onWithdraw}>↙ Unstake BTC</button>
+            <button className="action-btn withdraw" disabled={!isConnected} onClick={onWithdraw}>Unstake BTC</button>
           </div>
           <div className="action-card">
-            <div className="action-label green">↗ Direct Transfer</div>
+            <div className="action-label green"><ArrowUpRight size={11} />Direct Transfer</div>
             <input className="dapp-input" placeholder="Recipient 0x..." value={sendTo} onChange={e => setSendTo(e.target.value)} style={{ marginBottom: 8 }} />
             <div className="input-wrap">
               <input className="dapp-input" type="number" placeholder="0.000000" value={sendAmount} onChange={e => setSendAmount(e.target.value)} />
@@ -693,7 +693,7 @@ function StakingPage({ staked, balance, isConnected, stakeAmount, setStakeAmount
               <div className="ib-row"><span>Network</span><span>Mezo Testnet</span></div>
               <div className="ib-row"><span>Speed</span><span className="amber">Standard</span></div>
             </div>
-            <button className="action-btn send" disabled={!isConnected} onClick={onSend}>↗ Send BTC</button>
+            <button className="action-btn send" disabled={!isConnected} onClick={onSend}>Send BTC</button>
           </div>
         </div>
         <div className="card">
@@ -1125,23 +1125,25 @@ function AppContent() {
 }
 
 function SplashScreen({ onDone }: { onDone: () => void }) {
-  const [phase, setPhase] = useState<'enter' | 'pulse' | 'exit'>('enter');
+  const [phase, setPhase] = useState<'enter' | 'ripple' | 'exit'>('enter');
   const doneRef = useRef(false);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setPhase('pulse'), 600);
-    const t2 = setTimeout(() => setPhase('exit'), 2400);
-    const t3 = setTimeout(() => { if (!doneRef.current) { doneRef.current = true; onDone(); } }, 3000);
+    const t1 = setTimeout(() => setPhase('ripple'), 480);
+    const t2 = setTimeout(() => setPhase('exit'), 2500);
+    const t3 = setTimeout(() => { if (!doneRef.current) { doneRef.current = true; onDone(); } }, 3100);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [onDone]);
 
   return (
     <div className={`splash splash--${phase}`}>
-      <div className="splash__ring splash__ring--1" />
-      <div className="splash__ring splash__ring--2" />
-      <div className="splash__ring splash__ring--3" />
+      <div className="splash__water-bg" />
+      {[1,2,3,4,5,6,7,8].map(i => (
+        <div key={i} className={`splash__ripple splash__ripple--${i}`} />
+      ))}
       <img src="/mezo-icon.png" className="splash__logo" alt="Mezo" />
       <p className="splash__wordmark">MEZO</p>
+      <p className="splash__tagline">Bitcoin Layer 2 · DeFi Protocol</p>
     </div>
   );
 }
