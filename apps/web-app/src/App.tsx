@@ -3,11 +3,15 @@ import {
   LayoutDashboard, Coins, Vault, Flame, Clock3, TrendingUp,
   Settings, Shield, ArrowDownLeft, ArrowUpRight, ArrowDown,
   CheckCircle, Send, Home, Info, Plus, XCircle,
-  DollarSign, ShoppingCart, Gamepad2,
+  DollarSign, ShoppingCart, Gamepad2, PiggyBank, Building2,
+  LayoutGrid, Search, X as XIcon, ArrowDownUp,
 } from 'lucide-react';
 import PaymentsPage from './pages/PaymentsPage';
 import GamingPage   from './pages/GamingPage';
 import ShopPage     from './pages/ShopPage';
+import SavingsPage  from './pages/SavingsPage';
+import KYBPage      from './pages/KYBPage';
+import SwapPage     from './pages/SwapPage';
 const mezoLogo = '/mezo-icon.svg';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppKit } from '@reown/appkit/react';
@@ -114,7 +118,7 @@ function MetricCard({ label, value, sub, change, changeDir, accent }: any) {
   );
 }
 
-function TopBar({ title, blockNumber, gasPriceGwei }: { title: string; blockNumber?: bigint; gasPriceGwei?: number }) {
+function TopBar({ title, blockNumber, gasPriceGwei, onMenuOpen }: { title: string; blockNumber?: bigint; gasPriceGwei?: number; onMenuOpen?: () => void }) {
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { open } = useAppKit();
@@ -135,6 +139,11 @@ function TopBar({ title, blockNumber, gasPriceGwei }: { title: string; blockNumb
       <div className="topbar-right">
         <div className="pill amber"><span className="blink">◉</span> Block {blockNumber ? `#${blockNumber.toLocaleString()}` : '#...'}</div>
         <div className="pill green"><span>●</span> Mezo · {gasPriceGwei ?? 0} gwei</div>
+        {onMenuOpen && (
+          <button className="topbar-menu-btn" onClick={onMenuOpen} title="All Features">
+            <LayoutGrid size={16} />
+          </button>
+        )}
         {isConnected ? (
           <div className="topbar-wallet">
             <span className="topbar-addr"><span className="online-dot" />{address?.slice(0, 6)}…{address?.slice(-4)}</span>
@@ -150,7 +159,7 @@ function TopBar({ title, blockNumber, gasPriceGwei }: { title: string; blockNumb
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 
-function Sidebar({ address, isConnected, balance, musdBalance, onConnect, onDisconnect, connectors }: any) {
+function Sidebar({ address, isConnected, balance, musdBalance, onConnect, onDisconnect, connectors, onMenuOpen }: any) {
   const location = useLocation();
   const links = [
     { to: '/',        label: 'Dashboard', icon: <LayoutDashboard size={17} />, badge: null       },
@@ -170,7 +179,13 @@ function Sidebar({ address, isConnected, balance, musdBalance, onConnect, onDisc
         <div className="logo-sub">Mezo Testnet · v1.0.0</div>
       </div>
       <nav className="nav" style={{ overflowY: 'auto', flex: 1 }}>
-        <div className="nav-section-label">Main</div>
+        {/* All Features button */}
+        <button className="nav-menu-btn" onClick={onMenuOpen}>
+          <LayoutGrid size={15} />
+          All Features
+          <span className="nav-menu-count">{ALL_TABS.length}</span>
+        </button>
+        <div className="nav-section-label" style={{ marginTop: 12 }}>Main</div>
         {links.map(l => (
           <Link key={l.to} to={l.to} className={`nav-item${location.pathname === l.to ? ' active' : ''}`}>
             <span className="nav-icon">{l.icon}</span>
@@ -179,12 +194,16 @@ function Sidebar({ address, isConnected, balance, musdBalance, onConnect, onDisc
           </Link>
         ))}
         <div className="nav-section-label" style={{ marginTop: 14 }}>Consumer</div>
-        <Link to="/pay"   className={`nav-item${location.pathname === '/pay'   ? ' active' : ''}`}><span className="nav-icon"><DollarSign   size={17} /></span>Pay<span className="nav-badge">MUSD</span></Link>
-        <Link to="/shop"  className={`nav-item${location.pathname === '/shop'  ? ' active' : ''}`}><span className="nav-icon"><ShoppingCart  size={17} /></span>Shop</Link>
-        <Link to="/games" className={`nav-item${location.pathname === '/games' ? ' active' : ''}`}><span className="nav-icon"><Gamepad2      size={17} /></span>Games</Link>
+        <Link to="/pay"      className={`nav-item${location.pathname === '/pay'      ? ' active' : ''}`}><span className="nav-icon"><DollarSign   size={17} /></span>Pay<span className="nav-badge">MUSD</span></Link>
+        <Link to="/swap"     className={`nav-item${location.pathname === '/swap'     ? ' active' : ''}`}><span className="nav-icon"><ArrowDownUp  size={17} /></span>Swap</Link>
+        <Link to="/savings"  className={`nav-item${location.pathname === '/savings'  ? ' active' : ''}`}><span className="nav-icon"><PiggyBank    size={17} /></span>Savings</Link>
+        <Link to="/shop"     className={`nav-item${location.pathname === '/shop'     ? ' active' : ''}`}><span className="nav-icon"><ShoppingCart size={17} /></span>Shop</Link>
+        <Link to="/games"    className={`nav-item${location.pathname === '/games'    ? ' active' : ''}`}><span className="nav-icon"><Gamepad2     size={17} /></span>Games</Link>
+        <div className="nav-section-label" style={{ marginTop: 14 }}>Compliance</div>
+        <Link to="/kyb"      className={`nav-item${location.pathname === '/kyb'      ? ' active' : ''}`}><span className="nav-icon"><Building2   size={17} /></span>KYB<span className="nav-badge" style={{ background: '#f59e0b' }}>NEW</span></Link>
         <div className="nav-section-label" style={{ marginTop: 14 }}>Settings</div>
-        <Link to="/settings" className={`nav-item${location.pathname === '/settings' ? ' active' : ''}`}><span className="nav-icon"><Settings size={17} /></span>Network</Link>
-        <Link to="/settings" className={`nav-item${location.pathname === '/settings' ? ' active' : ''}`}><span className="nav-icon"><Shield size={17} /></span>Security</Link>
+        <Link to="/settings" className={`nav-item${location.pathname === '/settings' ? ' active' : ''}`}><span className="nav-icon"><Settings    size={17} /></span>Network</Link>
+        <Link to="/settings" className={`nav-item${location.pathname === '/settings' ? ' active' : ''}`}><span className="nav-icon"><Shield      size={17} /></span>Security</Link>
       </nav>
       <div className="wallet-area">
         {isConnected ? (
@@ -222,7 +241,7 @@ function Sidebar({ address, isConnected, balance, musdBalance, onConnect, onDisc
 
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
-function Dashboard({ balance, staked, vaultBalance, musdBalance, borrowPosition, live }: any) {
+function Dashboard({ balance, staked, vaultBalance, musdBalance, borrowPosition, live, onMenuOpen }: any) {
   const btcPrice    = live.ethUsd || 97500;
   const musdFmt     = musdBalance ? parseFloat(formatEther(musdBalance as bigint)).toFixed(2) : '0.00';
   const btcDebt     = borrowPosition?.[0] ? Number(formatEther(borrowPosition[0])) : 0;
@@ -234,7 +253,7 @@ function Dashboard({ balance, staked, vaultBalance, musdBalance, borrowPosition,
 
   return (
     <div className="page-content fade-in">
-      <TopBar title="Overview" blockNumber={live.blockNumber} gasPriceGwei={live.gasPriceGwei} />
+      <TopBar title="Overview" blockNumber={live.blockNumber} gasPriceGwei={live.gasPriceGwei} onMenuOpen={onMenuOpen} />
       <div className="content-wrap">
 
         {/* Metrics */}
@@ -983,19 +1002,152 @@ function SettingsPage() {
   );
 }
 
+// ─── App Menu Data ────────────────────────────────────────────────────────────
+
+const ALL_TABS = [
+  // Main
+  { to: '/',         label: 'Dashboard', desc: 'Portfolio overview & live BTC price',       icon: <LayoutDashboard size={22} />, section: 'Main',       badge: null,     color: '#7c6ef7' },
+  { to: '/borrow',   label: 'Borrow',    desc: 'Mint MUSD at 1% fixed APR',                 icon: <Coins           size={22} />, section: 'Main',       badge: '1% APR', color: '#f59e0b' },
+  { to: '/vault',    label: 'Vault',     desc: 'Secure BTC deposit & withdrawal vault',     icon: <Vault           size={22} />, section: 'Main',       badge: null,     color: '#38bdf8' },
+  { to: '/staking',  label: 'Staking',   desc: 'Stake BTC and earn 4.8% APY',               icon: <Flame           size={22} />, section: 'Main',       badge: '4.8%',   color: '#22d3a8' },
+  { to: '/history',  label: 'History',   desc: 'Transaction history & on-chain receipts',   icon: <Clock3          size={22} />, section: 'Main',       badge: null,     color: '#94a3b8' },
+  { to: '/analysis', label: 'Analysis',  desc: 'Portfolio analytics, charts & projections', icon: <TrendingUp      size={22} />, section: 'Main',       badge: null,     color: '#a78bfa' },
+  // Consumer
+  { to: '/pay',      label: 'Pay',       desc: 'Send & receive MUSD globally',               icon: <DollarSign      size={22} />, section: 'Consumer',   badge: 'MUSD',   color: '#22d3a8' },
+  { to: '/swap',     label: 'Swap',      desc: 'Swap BTC, MUSD & WBTC via DEX router',       icon: <ArrowDownUp     size={22} />, section: 'Consumer',   badge: null,     color: '#f87171' },
+  { to: '/savings',  label: 'Savings',   desc: 'Fixed, flexible & auto-save yield products', icon: <PiggyBank       size={22} />, section: 'Consumer',   badge: null,     color: '#f59e0b' },
+  { to: '/shop',     label: 'Shop',      desc: 'Merchant tools, digital goods & creator economy', icon: <ShoppingCart size={22} />, section: 'Consumer', badge: null,     color: '#7c6ef7' },
+  { to: '/games',    label: 'Games',     desc: 'Prize pools, tournaments & real economies', icon: <Gamepad2        size={22} />, section: 'Consumer',   badge: null,     color: '#f87171' },
+  // Compliance
+  { to: '/kyb',      label: 'KYB',       desc: 'Business verification & AML compliance',    icon: <Building2       size={22} />, section: 'Compliance', badge: 'NEW',    color: '#38bdf8' },
+  // Settings
+  { to: '/settings', label: 'Network',   desc: 'Switch between Mezo Mainnet & Testnet',     icon: <Settings        size={22} />, section: 'Settings',   badge: null,     color: '#6b7280' },
+  { to: '/settings', label: 'Security',  desc: 'Wallet connection & security controls',     icon: <Shield          size={22} />, section: 'Settings',   badge: null,     color: '#6b7280' },
+];
+
+const SECTION_ORDER = ['Main', 'Consumer', 'Compliance', 'Settings'];
+
+// ─── App Menu Overlay ─────────────────────────────────────────────────────────
+
+function AppMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const navigate   = useNavigate();
+  const location   = useLocation();
+  const [query, setQuery] = useState('');
+
+  // Close on Escape
+  React.useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    if (open) document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, [open, onClose]);
+
+  // Reset search when closed
+  React.useEffect(() => { if (!open) setQuery(''); }, [open]);
+
+  if (!open) return null;
+
+  const q = query.toLowerCase();
+  const filtered = ALL_TABS.filter(t =>
+    t.label.toLowerCase().includes(q) || t.desc.toLowerCase().includes(q) || t.section.toLowerCase().includes(q)
+  );
+
+  const sections = q
+    ? [{ label: 'Results', tabs: filtered }]
+    : SECTION_ORDER.map(s => ({ label: s, tabs: ALL_TABS.filter(t => t.section === s) })).filter(s => s.tabs.length);
+
+  const go = (to: string) => { navigate(to); onClose(); };
+
+  return (
+    <div className="appmenu-overlay" onClick={onClose}>
+      <div className="appmenu-panel" onClick={e => e.stopPropagation()}>
+
+        {/* Header */}
+        <div className="appmenu-header">
+          <div className="appmenu-title">
+            <LayoutGrid size={18} style={{ color: 'var(--accent)' }} />
+            All Features
+          </div>
+          <div className="appmenu-search-wrap">
+            <Search size={14} className="appmenu-search-icon" />
+            <input
+              className="appmenu-search"
+              placeholder="Search tabs…"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              autoFocus
+            />
+            {query && (
+              <button className="appmenu-clear" onClick={() => setQuery('')}><XIcon size={13} /></button>
+            )}
+          </div>
+          <button className="appmenu-close" onClick={onClose}><XIcon size={18} /></button>
+        </div>
+
+        {/* Tab grid */}
+        <div className="appmenu-body">
+          {sections.map(sec => (
+            <div key={sec.label} className="appmenu-section">
+              <div className="appmenu-section-label">{sec.label}</div>
+              <div className="appmenu-grid">
+                {sec.tabs.map((tab, i) => {
+                  const isActive = location.pathname === tab.to;
+                  return (
+                    <button
+                      key={`${tab.to}-${i}`}
+                      className={`appmenu-tile${isActive ? ' active' : ''}`}
+                      onClick={() => go(tab.to)}
+                      style={{ '--tile-color': tab.color } as React.CSSProperties}
+                    >
+                      <div className="appmenu-tile-icon" style={{ color: tab.color, background: tab.color + '18' }}>
+                        {tab.icon}
+                      </div>
+                      <div className="appmenu-tile-body">
+                        <div className="appmenu-tile-name">
+                          {tab.label}
+                          {tab.badge && (
+                            <span className="appmenu-tile-badge" style={{ background: tab.color + '22', color: tab.color, border: `1px solid ${tab.color}44` }}>
+                              {tab.badge}
+                            </span>
+                          )}
+                        </div>
+                        <div className="appmenu-tile-desc">{tab.desc}</div>
+                      </div>
+                      {isActive && <span className="appmenu-tile-check">✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+          {sections.length === 0 && (
+            <div style={{ textAlign: 'center', padding: '48px', color: 'var(--muted)', fontSize: 13 }}>
+              No tabs found for "<span style={{ color: 'var(--text)' }}>{query}</span>"
+            </div>
+          )}
+        </div>
+
+        {/* Footer hint */}
+        <div className="appmenu-footer">
+          <span>Press <kbd>Esc</kbd> to close</span>
+          <span>{ALL_TABS.length} features total</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
 // ─── Mobile Bottom Nav ────────────────────────────────────────────────────────
 
-function MobileNav() {
+function MobileNav({ onMenuOpen }: { onMenuOpen: () => void }) {
   const location = useLocation();
   const links = [
-    { to: '/',         label: 'Home',    icon: <Home          size={20} /> },
-    { to: '/pay',      label: 'Pay',     icon: <DollarSign    size={20} /> },
-    { to: '/shop',     label: 'Shop',    icon: <ShoppingCart  size={20} /> },
-    { to: '/games',    label: 'Games',   icon: <Gamepad2      size={20} /> },
-    { to: '/staking',  label: 'Staking', icon: <Flame         size={20} /> },
-    { to: '/settings', label: 'More',    icon: <Settings      size={20} /> },
+    { to: '/',        label: 'Home',  icon: <Home         size={20} /> },
+    { to: '/pay',     label: 'Pay',   icon: <DollarSign   size={20} /> },
+    { to: '/savings', label: 'Save',  icon: <PiggyBank    size={20} /> },
+    { to: '/shop',    label: 'Shop',  icon: <ShoppingCart size={20} /> },
+    { to: '/games',   label: 'Games', icon: <Gamepad2     size={20} /> },
   ];
   return (
     <nav className="mobile-nav">
@@ -1005,6 +1157,10 @@ function MobileNav() {
           <span className="mobile-nav-label">{l.label}</span>
         </Link>
       ))}
+      <button className="mobile-nav-item mobile-nav-menu" onClick={onMenuOpen}>
+        <span className="mobile-nav-icon"><LayoutGrid size={20} /></span>
+        <span className="mobile-nav-label">Menu</span>
+      </button>
     </nav>
   );
 }
@@ -1027,6 +1183,7 @@ function AppContent() {
 
   const live = useLiveChainData(address);
 
+  const [menuOpen,            setMenuOpen]             = useState(false);
   const [stakeAmount,         setStakeAmount]         = useState('');
   const [withdrawAmount,      setWithdrawAmount]       = useState('');
   const [depositAmount,       setDepositAmount]        = useState('');
@@ -1104,10 +1261,11 @@ function AppContent() {
   return (
     <div className="app-layout">
       <BgCanvas />
-      <Sidebar address={address} isConnected={isConnected} balance={walletBalance} musdBalance={musdBalance} connectors={connectors} onConnect={connect} onDisconnect={disconnect} />
+      <AppMenu open={menuOpen} onClose={() => setMenuOpen(false)} />
+      <Sidebar address={address} isConnected={isConnected} balance={walletBalance} musdBalance={musdBalance} connectors={connectors} onConnect={connect} onDisconnect={disconnect} onMenuOpen={() => setMenuOpen(true)} />
       <main className="app-main">
         <Routes>
-          <Route path="/" element={<Dashboard balance={walletBalance?.formatted} staked={stakedFormatted} vaultBalance={vaultBalanceFormatted} musdBalance={musdBalance} borrowPosition={borrowPosition as any} live={live} />} />
+          <Route path="/" element={<Dashboard balance={walletBalance?.formatted} staked={stakedFormatted} vaultBalance={vaultBalanceFormatted} musdBalance={musdBalance} borrowPosition={borrowPosition as any} live={live} onMenuOpen={() => setMenuOpen(true)} />} />
           <Route path="/borrow" element={
             <BorrowPage
               borrowPosition={borrowPosition as any} musdBalance={musdBalance}
@@ -1126,11 +1284,14 @@ function AppContent() {
           <Route path="/analysis" element={<AnalysisPage balance={walletBalance?.formatted} staked={stakedFormatted} vaultBalance={vaultBalanceFormatted} live={live} />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/pay"      element={<PaymentsPage />} />
+          <Route path="/swap"     element={<SwapPage />} />
+          <Route path="/savings"  element={<SavingsPage />} />
           <Route path="/shop"     element={<ShopPage />} />
           <Route path="/games"    element={<GamingPage />} />
+          <Route path="/kyb"      element={<KYBPage />} />
         </Routes>
       </main>
-      <MobileNav />
+      <MobileNav onMenuOpen={() => setMenuOpen(true)} />
     </div>
   );
 }
