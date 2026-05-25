@@ -2,11 +2,11 @@ import { createAppKit } from "@reown/appkit/react";
 import { WagmiAdapter } from "@reown/appkit-adapter-wagmi";
 import type { AppKitNetwork } from "@reown/appkit/networks";
 
-const projectId = (import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || import.meta.env.VITE_PROJECT_ID) as string;
+const projectId = import.meta.env.VITE_PROJECT_ID as string;
 const rpcUrl    = (import.meta.env.VITE_RPC_URL as string) || "https://rpc.test.mezo.org";
 
 if (!projectId) {
-  console.warn("[appkit] VITE_WALLETCONNECT_PROJECT_ID is not set.");
+  console.warn("[appkit] VITE_PROJECT_ID is not set.");
 }
 
 export const mezoTestnet: AppKitNetwork = {
@@ -22,28 +22,15 @@ export const mezoTestnet: AppKitNetwork = {
   },
 };
 
-export const mezoMainnet: AppKitNetwork = {
-  id: 31612,
-  name: "Mezo",
-  nativeCurrency: { name: "Bitcoin", symbol: "BTC", decimals: 18 },
-  rpcUrls: {
-    default: { http: ["https://rpc-http.mezo.boar.network"] },
-    public:  { http: ["https://mainnet.mezo.public.validationcloud.io"] },
-  },
-  blockExplorers: {
-    default: { name: "Mezo Explorer", url: "https://explorer.mezo.org" },
-  },
-};
-
 const wagmiAdapter = new WagmiAdapter({
-  networks: [mezoMainnet, mezoTestnet],
+  networks: [mezoTestnet],
   projectId: projectId || "",
   ssr: false,
 });
 
 createAppKit({
   adapters: [wagmiAdapter],
-  networks: [mezoMainnet, mezoTestnet] as [AppKitNetwork, ...AppKitNetwork[]],
+  networks: [mezoTestnet] as [AppKitNetwork, ...AppKitNetwork[]],
   projectId: projectId || "",
   metadata: {
     name: "Mezo Legacy",

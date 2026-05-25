@@ -18,7 +18,7 @@ import {
   CartesianGrid, BarChart, Bar
 } from 'recharts';
 import { STAKING_ADDRESS, STAKING_ABI } from './constants/staking';
-import { VAULT_ADDRESS, VAULT_ABI }     from './constants/contract';
+import { VAULT_ADDRESS, VAULT_ABI }     from './constants/staking';
 import { MUSD_ADDRESS, MUSD_ABI, BORROW_ADDRESS, BORROW_ABI } from './constants/musd';
 import { useLiveChainData } from './hooks/useLiveChainData';
 import './App.css';
@@ -40,7 +40,7 @@ const FALLBACK_PRICE_DATA = [
   { time: '00:00', price: 93200 }, { time: '04:00', price: 92800 },
   { time: '08:00', price: 94100 }, { time: '12:00', price: 95400 },
   { time: '16:00', price: 96200 }, { time: '20:00', price: 95800 },
-  { time: '24:00', price: 97500 },
+  { time: '24:00', price: 103000 },
 ];
 
 const rewardsData = [
@@ -190,7 +190,7 @@ function Sidebar({ address, isConnected, balance, musdBalance, onConnect, onDisc
               {musdFmt} MUSD
             </div>
             <div className="wallet-usd">
-              ≈ ${(parseFloat(balance?.formatted || '0') * 97500).toLocaleString('en-US', { maximumFractionDigits: 2 })} USD
+              ≈ ${(parseFloat(balance?.formatted || '0') * 103000).toLocaleString('en-US', { maximumFractionDigits: 2 })} USD
             </div>
             <div className="wallet-actions">
               <button className="wallet-btn primary"><ArrowUpRight size={13} /> Send</button>
@@ -215,7 +215,7 @@ function Sidebar({ address, isConnected, balance, musdBalance, onConnect, onDisc
 // ─── Dashboard ────────────────────────────────────────────────────────────────
 
 function Dashboard({ balance, staked, vaultBalance, musdBalance, borrowPosition, live }: any) {
-  const btcPrice    = live.ethUsd || 97500;
+  const btcPrice    = live.ethUsd || 103000;
   const musdFmt     = musdBalance ? parseFloat(formatEther(musdBalance as bigint)).toFixed(2) : '0.00';
   const btcDebt     = borrowPosition?.[0] ? Number(formatEther(borrowPosition[0])) : 0;
   const musdDebt    = borrowPosition?.[1] ? Number(formatEther(borrowPosition[1])) : 0;
@@ -297,7 +297,7 @@ function Dashboard({ balance, staked, vaultBalance, musdBalance, borrowPosition,
               </ResponsiveContainer>
             </div>
             <div className="chart-footer">
-              <div><div className="cf-label">BTC Price</div><div className="cf-val green">${(live.ethUsd || 97500).toLocaleString()}</div></div>
+              <div><div className="cf-label">BTC Price</div><div className="cf-val green">${(live.ethUsd || 103000).toLocaleString()}</div></div>
               <div style={{ textAlign: 'right' }}><div className="cf-label">Network</div><div className="cf-val green">Mezo Testnet</div></div>
             </div>
           </div>
@@ -391,7 +391,7 @@ function BorrowPage({
   addCollateralAmt, setAddCollateralAmt, onAddCollateral,
   onClosePosition, live,
 }: any) {
-  const btcPrice = live.ethUsd || 97500;
+  const btcPrice = live.ethUsd || 103000;
 
   // Live position data from contract read
   const btcCollateral  = borrowPosition?.[0] ? Number(formatEther(borrowPosition[0])) : 0;
@@ -579,7 +579,7 @@ function BorrowPage({
 // ─── Vault Page ───────────────────────────────────────────────────────────────
 
 function VaultPage({ vaultBalance, tvl, isConnected, depositAmount, setDepositAmount, onDeposit, vaultWithdrawAmount, setVaultWithdrawAmount, onVaultWithdraw, live }: any) {
-  const btcPrice = live.ethUsd || 97500;
+  const btcPrice = live.ethUsd || 103000;
   const tvlBtc   = Number(tvl ?? 0n) / 1e18;
   const tvlUsd   = (tvlBtc * btcPrice).toLocaleString();
   const userBtc  = parseFloat(vaultBalance || '0');
@@ -776,7 +776,7 @@ function HistoryPage({ history }: { history: TransactionRecord[] }) {
 // ─── Analysis Page ────────────────────────────────────────────────────────────
 
 function AnalysisPage({ balance, staked, vaultBalance, live }: any) {
-  const btcPrice = live.ethUsd || 97500;
+  const btcPrice = live.ethUsd || 103000;
   const tvlBtc   = Number(live.tvlWei ?? 0n) / 1e18;
   const tvlUsd   = (tvlBtc * btcPrice).toFixed(0);
   const totalBtc = parseFloat(staked || '0') + parseFloat(balance || '0') + parseFloat(vaultBalance || '0');
@@ -883,10 +883,6 @@ function SettingsPage() {
   };
 
   const networks = [
-    {
-      id: 31612, label: 'Mezo Mainnet', rpc: 'https://rpc-http.mezo.boar.network',
-      explorer: 'https://explorer.mezo.org', badge: 'Mainnet',
-    },
     {
       id: 31611, label: 'Mezo Testnet', rpc: 'https://rpc.test.mezo.org',
       explorer: 'https://explorer.test.mezo.org', badge: 'Testnet',
