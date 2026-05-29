@@ -943,7 +943,7 @@ function SettingsPage() {
                   </div>
                   <div style={{ display: 'flex', gap: 8, marginLeft: 'auto' }}>
                     <button className="wallet-btn" onClick={copyAddress}>{copied ? '✓ Copied' : 'Copy'}</button>
-                    <a href={`https://explorer.mezo.org/address/${address}`} target="_blank" rel="noreferrer"
+                    <a href={`https://explorer.test.mezo.org/address/${address}`} target="_blank" rel="noreferrer"
                       className="wallet-btn" style={{ textDecoration: 'none', textAlign: 'center' }}>Explorer ↗</a>
                   </div>
                 </div>
